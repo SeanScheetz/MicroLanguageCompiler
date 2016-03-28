@@ -1,0 +1,6 @@
+begin
+   read(i,j)
+   i := i * 5;
+   j := (i+3) - (i   + 6)
+   write(x,y);
+end

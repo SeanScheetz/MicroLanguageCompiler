@@ -1,0 +1,7 @@
+begin
+   read(i,j)
+   i := i + 55;
+     j := (i+3) - (i   + 6)
+   k3 := 2 +
+     	write(x,y);
+end
