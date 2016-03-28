@@ -6,3 +6,4 @@ begin #test1
    k3 := 2 +
      	write(x,y);
 end
+        `
