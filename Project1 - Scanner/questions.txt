@@ -5,3 +5,4 @@ What symbol for division?
 
 What is that formula you said you would use to average out bad mid
 terms and the final?
+ANSWER: New Midterm Grade = (OldMidtermGrade+Final)/2
