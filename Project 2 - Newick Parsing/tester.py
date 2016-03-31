@@ -41,11 +41,11 @@ if __name__ == "__main__":
 	t = parse_newick("(a,b,cd;")
 	print(t) # correct: Missing closing ')'
 	t = parse_newick("(a,b)*;")
-	print(t) # correct: invalid
+	print(t) # correct: token not in terminal set
 	t = parse_newick("(*,b)c;")
-	print(t) # correct: invalid symbol
+	print(t) # correct: token not in terminal set
 	t = parse_newick("(a,*)c;")
-	print(t) # correct: invalid symbol
-	#t = parse_newick("(a,b);")
-	#print(t) # correct: missing required label
+	print(t) # correct: token not in terminal set
+	t = parse_newick("(a,b);")
+	print(t) # correct: missing label
 

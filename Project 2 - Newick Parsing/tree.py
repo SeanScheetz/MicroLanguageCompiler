@@ -58,6 +58,7 @@ def lexer(ts):
 #
 # Spacing should not matter: "(a,b)c;", and " ( a  ,  b ) c; " should result in idential
 # trees.
+# terminal set: a-zA-Z0-9,)(;
 def parse_newick(ts):
 	"""
 	Take a newick string and return the corresponding tree object.
@@ -76,8 +77,6 @@ def T(current, token_gen):
 	else:
 		raise ParserException("Terminating semicolon missing.")
 
-#terminal set: a-zA-Z0-9,)(;
-#the only terminals that come immediately after an S are \w+, (, or ,
 def S(current, token_gen):
 	if re.match("\w+", current):
 		while True:
@@ -91,7 +90,7 @@ def S(current, token_gen):
 			raise ParserException("Missing closing ')'.")
 
 	else:
-		raise ParserException("S: Unrecognized Token")
+		raise ParserException("S: Invalid token - Missing label or token not in terminal set")
 
 	return S(next(token_gen), token_gen)
 
