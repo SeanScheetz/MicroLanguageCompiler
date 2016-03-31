@@ -30,8 +30,8 @@ if __name__ == "__main__":
 	print(t) # correct: ((a,b,c)d,(e,f)g)h;
 	t = parse_newick("ab;")
 	print(t) # correct: ab;
-	t = parse_newick("(a,bc)d;")
-	print(t) # correct: (a,bc)d;
+	t = parse_newick("(a,bc9)d;")
+	print(t) # correct: (a,bc9)d;
 
 	# parse_newick tests - exceptions
 	t = parse_newick("a")

@@ -1,5 +1,7 @@
-api_tester.py is your unit tests
+### Notes
 
-tester.py is the file I used to tests my methods as I worked
+- api_tester.py is your unit tests
 
-This does assume the tree at least has 1 node.
+- tester.py is the file I used to tests my methods as I worked
+
+- This does assume the tree at least has 1 node.
