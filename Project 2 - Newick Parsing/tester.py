@@ -48,4 +48,5 @@ if __name__ == "__main__":
 	print(t) # correct: token not in terminal set
 	t = parse_newick("(a,b);")
 	print(t) # correct: missing label
-
+	t = parse_newick("a,b,c,d;")
+	print(t) # correct: missing label
