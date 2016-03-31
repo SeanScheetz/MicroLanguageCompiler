@@ -23,4 +23,6 @@ in line 62 of parse_newick to "return pe.msg". There is a comment on that line w
 
 - This does assume the tree at least has 1 node.
 
-- Multiple alphanumeric character labels are accepted, but every node must have a label. I remember you saying that was okay in class.
+- Multiple alphanumeric character labels are accepted.
+
+- questions.txt are questions I think of during the project

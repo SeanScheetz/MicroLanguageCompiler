@@ -1,3 +1,8 @@
 Can I assume the newick string coming in to the parse_newick function is optimal if it doesn't have an error?
     e.g. Do I need to check for a child list that has no elements? "()a"
     already have it implemented, but if I can take it out it will be more efficient
+	
+How exactly do you determine what the conditionals are in each grammar function?
+	I think this is called the predict set? Is it whatever could possible come immediately after the current symbol?
+	I don't think so because in the production S -> S{, S}\w+ a "," can come after an S, but you don't explictly need that
+	I'm guessing predict and first set must be different. Gotta figure it out.
