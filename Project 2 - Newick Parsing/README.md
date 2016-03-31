@@ -2,6 +2,7 @@ Sean Scheetz
 
 ## Modified Grammar
 I slightly modifed your Grammar to the following:
+
 T -> S;
 
 S -> \w+ | (SLIST)\w+
