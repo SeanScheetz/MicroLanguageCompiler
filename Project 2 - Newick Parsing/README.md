@@ -9,7 +9,7 @@ S -> \w+ | (SLIST)\w+
 
 SLIST -> S {, S}
 
-I did this because it was slightly easier for me to visualize and because you said it was okay if we forced all nodes to be labeled.
+I did this because it was slightly easier for me to visualize and because you said it was okay if we forced all nodes to be labeled (said in class and in the Project2 FAQ/Errata.
 
 ## Notes
 
