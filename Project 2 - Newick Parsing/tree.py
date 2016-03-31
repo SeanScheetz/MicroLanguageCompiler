@@ -80,12 +80,15 @@ def T(current, token_gen):
 #the only possible terminals for S production is \w+ or (
 def S(current, token_gen):
 	if re.match("\w+", current):
-		return next(token_gen)
+		while True:
+			current = next(token_gen)
+			if not re.match("\w+", current):
+				return current
 
 	if current == "(":
 		current = SPrime(next(token_gen), token_gen)
 		if current != ")":
-			raise ParserException("Missing matching ')'.")
+			raise ParserException("Missing closing ')'.")
 
 	return S(next(token_gen), token_gen)
 

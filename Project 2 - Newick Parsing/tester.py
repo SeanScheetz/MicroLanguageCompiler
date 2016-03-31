@@ -1,4 +1,5 @@
 from tree import *
+import re
 
 if __name__ == "__main__":
 	t1 = tree("a")                 # a;
@@ -20,10 +21,24 @@ if __name__ == "__main__":
 	print(str(t4)) # correct: (a,b,c)d;
 	print(str(t8)) # correct: ((a,b,c)d,(e,f)g)h;
 
-	# parse_newick tests - add specific parser error cases later
+	# parse_newick tests - valid
 	t = parse_newick("a;")
 	print(t) # correct: a;
 	t = parse_newick("(a,b,c)d;")
 	print(t) # correct: (a,b,c)d;
 	t = parse_newick("((a,b,c)d,(e,f)g)h;")
 	print(t) # correct: ((a,b,c)d,(e,f)g)h;
+	t = parse_newick("ab;")
+	print(t) # correct: ab;
+	t = parse_newick("(a,bc)d;")
+	print(t) # correct: (a,bc)d;
+
+	# parse_newick tests - exceptions
+	t = parse_newick("a")
+	print(t) # correct: Terminating semicolon missing.
+	t = parse_newick("(a,b,c)d")
+	print(t) # correct: Terminating semicolon missing.
+	t = parse_newick("(a,b,cd;")
+	print(t) # correct: Missing closing ')'
+
+
