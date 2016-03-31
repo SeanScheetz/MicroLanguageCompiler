@@ -40,5 +40,12 @@ if __name__ == "__main__":
 	print(t) # correct: Terminating semicolon missing.
 	t = parse_newick("(a,b,cd;")
 	print(t) # correct: Missing closing ')'
-
+	t = parse_newick("(a,b)*;")
+	print(t) # correct: invalid
+	t = parse_newick("(*,b)c;")
+	print(t) # correct: invalid symbol
+	t = parse_newick("(a,*)c;")
+	print(t) # correct: invalid symbol
+	#t = parse_newick("(a,b);")
+	#print(t) # correct: missing required label
 

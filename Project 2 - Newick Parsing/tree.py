@@ -77,7 +77,7 @@ def T(current, token_gen):
 		raise ParserException("Terminating semicolon missing.")
 
 #terminal set: a-zA-Z0-9,)(;
-#the only possible terminals for S production is \w+ or (
+#the only terminals that come immediately after an S are \w+, (, or ,
 def S(current, token_gen):
 	if re.match("\w+", current):
 		while True:
@@ -85,10 +85,13 @@ def S(current, token_gen):
 			if not re.match("\w+", current):
 				return current
 
-	if current == "(":
+	elif current == "(":
 		current = SPrime(next(token_gen), token_gen)
 		if current != ")":
 			raise ParserException("Missing closing ')'.")
+
+	else:
+		raise ParserException("S: Unrecognized Token")
 
 	return S(next(token_gen), token_gen)
 
@@ -100,6 +103,7 @@ def SPrime(current, token_gen):
 		current = S(current, token_gen)
 		if current != ",":
 			break
+		current = next(token_gen)
 
 	return current
 
