@@ -1,6 +1,6 @@
 import re
 
-class tree:
+class tree2:
 	def __init__(self, label, children = None):
 		self.label = label
 		self.children = children if children is not None else []
@@ -63,54 +63,60 @@ def parse_newick(ts):
 	"""
 	Take a newick string and return the corresponding tree object.
 	"""
-	token_gen = lexer(ts)
+	G = lexer(ts)
 	try:
-		current, t = T(next(token_gen), token_gen)
+		current, t = T(next(G), G)
 		if current != "$":
-			raise ParserException("Symbols after terminating semicolon.")
+			print(current)
+			raise ParserException("Symbols after teminating semicolon.")
 		return t
 	except ParserException as pe:
 		return pe.msg
 
-def T(current, token_gen):
-	current, t = S(current, token_gen)
-	if current == ";":
-		return next(token_gen), t
+def T(current, G):
+	if re.match("\w+", current) or current == "(":
+		current, t = S(current, G)
+		current = next(G)
+		if current != ";":
+			raise ParserException("No terminating semicolon.")
 	else:
-		raise ParserException("Terminating semicolon missing.")
+		raise ParserException("Invalid first token.")
+	return next(G), t
 
-def S(current, token_gen):
+def S(current, G):
+	t = tree2("S")
+
 	if re.match("\w+", current):
 		label = current
 		while True:
-			current = next(token_gen)
+			current = next(G)
 			if re.match("\w+", current):
 				label += current
 			else:
-				return current, tree(label)
+				return current, tree2(label)
 
-	elif current == "(":
-		current, children = SPrime(next(token_gen), token_gen)
-		if current != ")":
-			raise ParserException("Missing closing ')'.")
+	if current == '(':
+		current, child = SLIST(next(G), G)
+		if current != ')':
+			raise ParserException("Missing closing ).")
 
 	else:
-		raise ParserException("Invalid token - Missing label or token not in terminal set")
+		print(current)
+		raise ParserException("S: Unrecognized token")
 
-	return S(next(token_gen), token_gen)
+	t.children.append(child)
+	return next(G), t
 
-def SPrime(current, token_gen):
-	stree = tree("sprime")
-	if current == ")":
-		return current, stree
+def SLIST(current, G):
+	t = tree2("SLIST")
+	if current == ')':
+		return current, t
 
 	while True:
-		current, t = S(current, token_gen)
-		stree.children.append(t)
-		if current != ",":
+		current, child = S(current, G)
+		t.children.append(child)
+		if current != ',':
 			break
-		current = next(token_gen)
+		current = next(G)
 
-	return current, stree
-
-
+	return current, t

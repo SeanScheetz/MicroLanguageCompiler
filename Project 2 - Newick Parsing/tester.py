@@ -1,5 +1,4 @@
 from tree import *
-import re
 
 if __name__ == "__main__":
 	t1 = tree("a")                 # a;
@@ -50,3 +49,5 @@ if __name__ == "__main__":
 	print(t) # correct: missing label
 	t = parse_newick("a,b,c,d;")
 	print(t) # correct: missing label
+	t = parse_newick("(a,b)d;a")
+	print(t) # correct: Symbols after terminating semicolon
