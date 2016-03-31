@@ -11,43 +11,47 @@ if __name__ == "__main__":
 	t8 = tree("h", [t4, t7])       # ((a,b,c)d,(e,f)g)h;
 
 	# len tests
-	print(len(t1)) # correct: 1
-	print(len(t4)) # correct: 4
-	print(len(t8)) # correct: 8
+	print("---__len__ tests---")
+	print("1. correct: 1 | " + str(len(t1)))
+	print("2. correct: 4 | " + str(len(t4)))
+	print("3. correct: 8 | " + str(len(t8)))
 
 	# str tests
-	print(str(t1)) # correct: a;
-	print(str(t4)) # correct: (a,b,c)d;
-	print(str(t8)) # correct: ((a,b,c)d,(e,f)g)h;
+	print("---__str__ tests---")
+	print("4. correct: a; | " + str(t1))
+	print("5. correct: (a,b,c)d; | " + str(t4))
+	print("6. correct: ((a,b,c)d,(e,f)g)h; | " + str(t8))
 
 	# parse_newick tests - valid
+	print("---parse newick tests-valid---")
 	t = parse_newick("a;")
-	print(t) # correct: a;
+	print("1. correct: a; | " + str(t))
 	t = parse_newick("(a,b,c)d;")
-	print(t) # correct: (a,b,c)d;
+	print("2. correct: (a,b,c)d; | " + str(t))
 	t = parse_newick("((a,b,c)d,(e,f)g)h;")
-	print(t) # correct: ((a,b,c)d,(e,f)g)h;
+	print("3. correct: ((a,b,c)d,(e,f)g)h; | " + str(t))
 	t = parse_newick("ab;")
-	print(t) # correct: ab;
+	print("4. correct: ab; | " + str(t))
 	t = parse_newick("(a,bc9)d;")
-	print(t) # correct: (a,bc9)d;
+	print("5. correct: (a,bc9)d; | " + str(t))
 
-	# parse_newick tests - exceptions
+	# # parse_newick tests - exceptions
+	print("---parse newick tests-exceptions---")
 	t = parse_newick("a")
-	print(t) # correct: Terminating semicolon missing.
+	print("1. correct: No terminating semicolon | " + t)
 	t = parse_newick("(a,b,c)d")
-	print(t) # correct: Terminating semicolon missing.
+	print("2. correct: No terminating semicolon | " + t)
 	t = parse_newick("(a,b,cd;")
-	print(t) # correct: Missing closing ')'
+	print("3. Missing closing ). | " + t)
 	t = parse_newick("(a,b)*;")
-	print(t) # correct: token not in terminal set
+	print("4. Unrecognized token. | " + t)
 	t = parse_newick("(*,b)c;")
-	print(t) # correct: token not in terminal set
+	print("5. Unrecognized token. | " + t)
 	t = parse_newick("(a,*)c;")
-	print(t) # correct: token not in terminal set
+	print("6. Unrecognized token. | " + t)
 	t = parse_newick("(a,b);")
-	print(t) # correct: missing label
+	print("7. No parent after set of children - missing label | " + t)
 	t = parse_newick("a,b,c,d;")
-	print(t) # correct: missing label
+	print("8. No terminating semicolon. | " + t) # there should be a terminating semi colon after the a in this case
 	t = parse_newick("(a,b)d;a")
-	print(t) # correct: Symbols after terminating semicolon
+	print("9. Symbols after terminating semicolon. | " + t)

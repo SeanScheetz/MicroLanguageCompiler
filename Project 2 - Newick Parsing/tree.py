@@ -50,67 +50,62 @@ def lexer(ts):
 		yield char
 	yield "$" # End of Input char - states EOI
 
-# Parse_newick Should raise the following ParserException errors when appropriate:
-# * Terminating semi-colon missing.
-# * Expected label missing.
-# * Missing command or ) where expected.
-# (You may add others as you see fit.)
-#
-# Spacing should not matter: "(a,b)c;", and " ( a  ,  b ) c; " should result in idential
-# trees.
 # terminal set: a-zA-Z0-9,)(;
 def parse_newick(ts):
-	"""
-	Take a newick string and return the corresponding tree object.
-	"""
-	token_gen = lexer(ts)
+	G = lexer(ts)
 	try:
-		current, t = T(next(token_gen), token_gen)
+		current, t = T(next(G), G)
 		if current != "$":
-			raise ParserException("Symbols after terminating semicolon.")
+			raise ParserException("Symbols after teminating semicolon.")
 		return t
 	except ParserException as pe:
 		return pe.msg
 
-def T(current, token_gen):
-	current, t = S(current, token_gen)
-	if current == ";":
-		return next(token_gen), t
+def T(current, G):
+	if re.match("\w+", current) or current == "(":
+		current, t = S(current, G)
+		if current != ";":
+			raise ParserException("No terminating semicolon.")
 	else:
-		raise ParserException("Terminating semicolon missing.")
+		raise ParserException("Invalid first token.")
+	return next(G), t
 
-def S(current, token_gen):
+def S(current, G):
 	if re.match("\w+", current):
 		label = current
 		while True:
-			current = next(token_gen)
+			current = next(G)
 			if re.match("\w+", current):
 				label += current
 			else:
 				return current, tree(label)
 
-	elif current == "(":
-		current, children = SPrime(next(token_gen), token_gen)
-		if current != ")":
-			raise ParserException("Missing closing ')'.")
+	if current == '(':
+		current, children = SLIST(next(G), G)
+		if current != ')':
+			raise ParserException("Missing closing ).")
+		current = next(G)
+		if not re.match("\w+", current): # a parent node must come after a set of children
+			raise ParserException("No parent after set of children - missing label")
+		current, t = S(current, G)
+		for child in children:
+			t.children.append(child)
 
 	else:
-		raise ParserException("Invalid token - Missing label or token not in terminal set")
+		raise ParserException("S: Unrecognized token")
 
-	return S(next(token_gen), token_gen)
+	return current, t
 
-def SPrime(current, token_gen):
-	stree = tree("sprime")
-	if current == ")":
-		return current, stree
+def SLIST(current, G):
+	if current == ')':
+		return current, tree("")
 
+	children = []
 	while True:
-		current, t = S(current, token_gen)
-		stree.children.append(t)
-		if current != ",":
+		current, child = S(current, G)
+		children.append(child)
+		if current != ',':
 			break
-		current = next(token_gen)
+		current = next(G)
 
-	return current, stree
-
-
+	return current, children
