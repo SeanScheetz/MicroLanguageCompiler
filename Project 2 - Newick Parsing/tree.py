@@ -59,7 +59,7 @@ def parse_newick(ts):
 			raise ParserException("Symbols after teminating semicolon.")
 		return t
 	except ParserException as pe:
-		return pe.msg
+		raise pe #replace "raise pe" with "return pe.msg" to use my tester.py. I had to throw the error for your unit tests to work
 
 def T(current, G):
 	if re.match("\w+", current) or current == "(":
