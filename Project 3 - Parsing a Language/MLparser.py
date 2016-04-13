@@ -1,12 +1,6 @@
 from lexer import lexer
 
 """
-IMPORTANT NOTE FOR ME: Right now no where is checking what follows expression
-I think the best time to check this is wherever it is actually being returned
-(e.g. if it is a ; that means we should check it when the function has returned all the way to statement)
-
-IMPORTANT NOTE FOR ME: make sure that all of the currents are being properly checked for the right type
-
 Parser for the Micro-language.
 Grammar:
    <program> -> begin <statement_list> end
