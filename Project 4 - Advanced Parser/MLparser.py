@@ -154,12 +154,10 @@ def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
 	current, child = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
 	t.children.append(child)
-	while current.name == "PLUS" or current.name == "MINUS": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
-		if current.name == "PLUS":
-			t.children.append(tree("PLUS"))
-		else: #current.name == "MINUS"
-			t.children.append(tree("MINUS"))
-		current, child = PRIMARY(next(G), G)
+	while current.t_class == "ARITHOP": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
+		current, child = ARITH_OP(current, G)
+		t.children.append(child)
+		current, child = PRIMARY(current, G)
 		t.children.append(child)
 	return current, t #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
 
@@ -185,6 +183,14 @@ def PRIMARY(current, G):
 	else:
 		raise ParserError("Inappropriate starting token in primary" + getTokenLineInfo(current))
 
+#the tree form for this one is different than the others because your tests skipped the ARITH_OP nodes and went
+#straight to the "PLUS" "MINUS" options
+#to add the ARITH_OP node add t = tree("ARITH_op") at the top and then append children to that tree in the ifs
 def ARITH_OP(current, G):
 	# process the ARITHOP here when building tree before returning the next (G)
-	return next(G) # should return something in  ( , ID , INTLITERAL }
+	if current.name == "PLUS":
+		return next(G), tree("PLUS")
+	if current.name == "MINUS":
+		return next(G), tree("MINUS")
+	else: #this should never happen because only way to get to this function is if current is an arith op
+		raise ParserError("Invalid ARITH_OP" + getTokenLineInfo(current))

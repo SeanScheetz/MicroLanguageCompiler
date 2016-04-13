@@ -129,8 +129,9 @@ def IDENT(current, G):
 
 def EXPRESSION(current, G):
 	current = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
-	while current.name == "PLUS" or current.name == "MINUS": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
-		current = PRIMARY(next(G), G)
+	while current.t_class == "ARITHOP": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
+		current = ARITH_OP(current, G)
+		current = PRIMARY(current, G)
 	return current #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
 
 def PRIMARY(current, G):
