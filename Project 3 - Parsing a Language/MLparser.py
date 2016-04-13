@@ -45,6 +45,11 @@ def parser(source_file, token_file):
 	G = lexer(source_file, token_file)
 	try:
 		result = PROGRAM(next(G), G)
+		try:
+			next(G) #at this point the source should have no more tokens - if the iterator has more, then it is actually a ParserError
+			raise ParserError("Tokens exist after END keyword.")
+		except StopIteration:
+			return True
 		return result
 	except ParserError as e:
 		raise e
@@ -63,10 +68,15 @@ def PROGRAM(current, G):
 		raise ParserError("Program doesn't begin with BEGIN" + getTokenLineInfo(current))
 
 def STATEMENT_LIST(current, G):
+	current = STATEMENT(current, G)
+	if current.name != "SEMICOLON":
+		raise ParserError("Statement doesn't end with a semicolon" + getTokenLineInfo(current))
+	current = next(G)
 	while current.name != "END":
-		current = STATEMENT(next(G), G) #needs to return a semicolon for a valid statement
+		current = STATEMENT(current, G) #needs to return a semicolon for a valid statement
 		if current.name != "SEMICOLON":
 			raise ParserError("Statement doesn't end with a semicolon" + getTokenLineInfo(current))
+		current = next(G)
 	return current
 
 def STATEMENT(current, G):
@@ -105,12 +115,14 @@ def ASSIGNMENT(current, G):
 def ID_LIST(current, G):
 	current = IDENT(current, G)
 	while current.name == "COMMA":
+		current = next(G)
 		current = IDENT(current, G)
 	return current # should return a )
 
 def EXPR_LIST(current, G):
 	current = EXPRESSION(current, G)
 	while current.name == "COMMA":
+		current = next(G)
 		current = EXPRESSION(current, G)
 	return current # should return a ; (if called from ASSIGNMENT) or return ) (if called from STATEMENT)
 
@@ -118,26 +130,26 @@ def IDENT(current, G):
 	#probably don't need to check this again since currently the only way to get to this branch is through assignment
 	#and the only way to get to assignment is through STATEMENT if it is an ID
 	if not current.name == "ID":
-		raise ParserError("Assignment does not begin with an identifier" + getTokenLineInfo(current))
+		raise ParserError("Invalid identifier" + getTokenLineInfo(current))
 	# when we are actually building the tree we will need to parse the ID here/store it in the symbol table here
 	return next(G)
 
 def EXPRESSION(current, G):
 	current = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
-	while current == "+" or current == "-": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
+	while current.name == "PLUS" or current.name == "MINUS": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
 		current = PRIMARY(next(G), G)
 	return current #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
 
 def PRIMARY(current, G):
 	if current.name == "LPAREN":
 		current = EXPRESSION(next(G), G)
-		if not current == "RPAREN":
+		if not current.name == "RPAREN":
 			raise ParserError("Expression not followed by matching ')' (in primary function)" + getTokenLineInfo(current))
 		return next(G) # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "ID":
-		current = IDENT(current, G)
-		return next(G) # should return something in {"," , ; , ) , + , -}
+		current = IDENT(current, G) #IDENT processes the ID and returns next token
+		return current # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "INTLIT":
 		# process the INTLIT here when building tree before returning the next (G)
