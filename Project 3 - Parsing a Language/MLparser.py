@@ -44,7 +44,6 @@ def parser(source_file, token_file):
 			raise ParserError("Tokens exist after END keyword.")
 		except StopIteration:
 			return True
-		return result
 	except ParserError as e:
 		raise e
 	except StopIteration as e:
