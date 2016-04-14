@@ -32,19 +32,20 @@ def getTokenLineInfo(token):
 
 def parser(source_file, token_file):
 	"""
-	source_file: A program written in the ML langauge.
+	:param source_file: A program written in the ML language.
+	:param token_file: A file defining the types of tokens in the ML language
 	returns True if the code is syntactically correct.
 	Throws a ParserError otherwise.
 	"""
 
 	G = lexer(source_file, token_file)
 	try:
-		tree = PROGRAM(next(G), G)
+		t, s = PROGRAM(next(G), G)
 		try:
 			next(G) #at this point the source should have no more tokens - if the iterator has more, then it is actually a ParserError
 			raise ParserError("Tokens exist after END keyword.")
 		except StopIteration:
-			return tree
+			return t, s
 	except ParserError as e:
 		raise e
 	except StopIteration:
@@ -52,13 +53,15 @@ def parser(source_file, token_file):
 
 def PROGRAM(current, G):
 	t = tree("PROGRAM")
+	s = {}
 	if current.name == "BEGIN":
 		t.children.append(tree("BEGIN"))
-		current, child = STATEMENT_LIST(next(G), G) #the returned child is the STATEMENT_LIST tree
+		current, child, s1 = STATEMENT_LIST(next(G), G) #the returned child is the STATEMENT_LIST tree
 		t.children.append(child)
+		s.update(s1)
 		if current.name == "END":
 			t.children.append(tree("END"))
-			return t
+			return t, s
 		else:
 			raise ParserError("Statement list complete, but no END token to signal end of program" + getTokenLineInfo(current))
 
@@ -67,118 +70,140 @@ def PROGRAM(current, G):
 
 def STATEMENT_LIST(current, G):
 	t = tree("STATEMENT_LIST")
-	current, child = STATEMENT(current, G) # Child is the STATEMENT tree
+	s = {}
+	current, child, s1 = STATEMENT(current, G) # Child is the STATEMENT tree
 	t.children.append(child)
+	s.update(s1)
 	if current.name != "SEMICOLON":
 		raise ParserError("Statement doesn't end with a semicolon" + getTokenLineInfo(current))
 	current = next(G)
 	while current.name != "END":
-		current, child = STATEMENT(current, G) #needs to return a semicolon for a valid statement
+		current, child, s1 = STATEMENT(current, G) #needs to return a semicolon for a valid statement
 		t.children.append(child)
+		s.update(s1)
 		if current.name != "SEMICOLON":
 			raise ParserError("Statement doesn't end with a semicolon" + getTokenLineInfo(current))
 		current = next(G)
-	return current, t
+	return current, t, s
 
 def STATEMENT(current, G):
 	t = tree("STATEMENT")
+	s = {}
 	if current.name == "ID":
-		current, child = ASSIGNMENT(current, G) #make sure ASSIGNMENT is returning next(G)
+		current, child, s1 = ASSIGNMENT(current, G) #make sure ASSIGNMENT is returning next(G)
 		t.children.append(child)
-		return current, t #current should be a ;
+		s.update(s1)
+		return current, t, s #current should be a ;
 
 	elif current.name == "READ":
 		t.children.append(tree("READ"))
 		current = next(G)
 		if not current.name == "LPAREN":
 			raise ParserError("READ token is not followed by a (" + getTokenLineInfo(current))
-		current, child = ID_LIST(next(G), G) #should be returning a )
+		current, child, s1 = ID_LIST(next(G), G) #should be returning a )
 		t.children.append(child) #child should be the ID_LIST tree
+		s.update(s1)
 		if not current.name == "RPAREN":
 			raise ParserError("Missing closing ) in READ statement" + getTokenLineInfo(current))
-		return next(G), t  #next(G) should be a ;
+		return next(G), t, s  #next(G) should be a ;
 
 	elif current.name == "WRITE":
 		t.children.append(tree("WRITE"))
 		current = next(G)
 		if not current.name == "LPAREN":
 			raise ParserError("WRITE token is not followed by a (" + getTokenLineInfo(current))
-		current, child = EXPR_LIST(next(G), G) #should be returning a )
+		current, child, s1 = EXPR_LIST(next(G), G) #should be returning a )
 		t.children.append(child)
+		s.update(s1)
 		if not current.name == "RPAREN":
 			raise ParserError("Missing closing ) in WRITE statement" + getTokenLineInfo(current))
-		return next(G), t  #next(G) should be a ;
+		return next(G), t, s  #next(G) should be a ;
 
 	else:
 		raise ParserError("Inappproriate token to start a statement" + getTokenLineInfo(current))
 
 def ASSIGNMENT(current, G):
 	t = tree("ASSIGNMENT")
-	current, child = IDENT(current, G) #should return a :=
+	s = {}
+	current, child, s1 = IDENT(current, G) #should return a :=
 	t.children.append(child)
+	s.update(s1)
 	if not current.name == "ASSIGNOP":
 		raise ParserError("Assignment operator does not follow identifer in assignment statement" + getTokenLineInfo(current))
-	current, child = EXPRESSION(next(G), G) # should return something that follows expression - we will check for it in whereever this function returns
+	current, child, s1 = EXPRESSION(next(G), G) # should return something that follows expression - we will check for it in whereever this function returns
 	t.children.append(child) #child should be EXPRESSION tree
-	return current, t
+	s.update(s1)
+	return current, t, s
 
 def ID_LIST(current, G):
 	t = tree("ID_LIST")
-	current, child = IDENT(current, G)
+	s = {}
+	current, child, s1 = IDENT(current, G)
 	t.children.append(child)
+	s.update(s1)
 	while current.name == "COMMA":
 		current = next(G)
-		current, child = IDENT(current, G)
+		current, child, s1 = IDENT(current, G)
 		t.children.append(child)
-	return current, t # should return a )
+		s.update(s1)
+	return current, t, s # should return a )
 
 def EXPR_LIST(current, G):
 	t = tree("EXPR_LIST")
-	current, child = EXPRESSION(current, G)
+	s = {}
+	current, child, s1 = EXPRESSION(current, G)
 	t.children.append(child)
+	s.update(s1)
 	while current.name == "COMMA":
 		current = next(G)
-		current, child = EXPRESSION(current, G)
+		current, child, s1 = EXPRESSION(current, G)
 		t.children.append(child)
-	return current, t # should return a ; (if called from ASSIGNMENT) or return ) (if called from STATEMENT)
+		s.update(s1)
+	return current, t, s # should return a ; (if called from ASSIGNMENT) or return ) (if called from STATEMENT)
 
 def IDENT(current, G):
 	t = tree("IDENT")
+	s = {current.pattern: None}
 	if not current.name == "ID":
 		raise ParserError("Invalid identifier" + getTokenLineInfo(current))
-	# when we are actually building the tree we will need to parse the ID here/store it in the symbol table here
 	t.children.append(tree("ID"))
-	return next(G), t
+	return next(G), t, s
 
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
-	current, child = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
+	s = {}
+	current, child, s1 = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
 	t.children.append(child)
+	s.update(s1)
 	while current.t_class == "ARITHOP": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
 		current, child = ARITH_OP(current, G)
 		t.children.append(child)
-		current, child = PRIMARY(current, G)
+		current, child, s1 = PRIMARY(current, G)
 		t.children.append(child)
-	return current, t #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
+		s.update(s1)
+	return current, t, s #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
 
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
+	s = {}
 	if current.name == "LPAREN":
-		current, child = EXPRESSION(next(G), G)
+		current, child, s1 = EXPRESSION(next(G), G)
 		t.children.append(child)
+		s.update(s1)
 		if not current.name == "RPAREN":
 			raise ParserError("Expression not followed by matching ')' (in primary function)" + getTokenLineInfo(current))
-		return next(G), t # should return something in {"," , ; , ) , + , -}
+		return next(G), t, s # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "ID":
-		current, child = IDENT(current, G) #IDENT processes the ID and returns next token
+		current, child, s1 = IDENT(current, G) #IDENT processes the ID and returns next token
 		t.children.append(child)
-		return current, t # should return something in {"," , ; , ) , + , -}
+		s.update(s1)
+		return current, t, s # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "INTLIT":
 		# process the INTLIT here when building tree before returning the next (G)
 		t.children.append(tree("INTLIT"))
-		return next(G), t # should return something in {"," , ; , ) , + , -}
+		return next(G), t, s # should return something in {"," , ; , ) , + , -}
 
 	else:
 		raise ParserError("Inappropriate starting token in primary" + getTokenLineInfo(current))
@@ -186,6 +211,7 @@ def PRIMARY(current, G):
 #the tree form for this one is different than the others because your tests skipped the ARITH_OP nodes and went
 #straight to the "PLUS" "MINUS" options
 #to add the ARITH_OP node add t = tree("ARITH_op") at the top and then append children to that tree in the ifs
+#don't need to update symbol table here because it is leaf node and no symbols will be found here
 def ARITH_OP(current, G):
 	# process the ARITHOP here when building tree before returning the next (G)
 	if current.name == "PLUS":
