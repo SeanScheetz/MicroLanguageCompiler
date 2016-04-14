@@ -4,6 +4,26 @@ import argparse
 def compiler(source, tokens, output):
 	pass
 
+def start():
+	pass
+
+def finish():
+	pass
+
+def read_ids():
+	pass
+
+def write_ids():
+	pass
+
+def assign():
+	pass
+
+def infix():
+	pass
+
+def process():
+	pass
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":

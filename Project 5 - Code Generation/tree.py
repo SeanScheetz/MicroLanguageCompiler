@@ -1,9 +1,10 @@
 import re
 
 class tree:
-	def __init__(self, label, children = None):
+	def __init__(self, label, children = None, val = None):
 		self.label = label
 		self.children = children if children is not None else []
+		self.val = val if val is not None else ""
 
 	def __str__(self):
 		return self.strHelper() + ";"

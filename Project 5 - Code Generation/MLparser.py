@@ -129,7 +129,7 @@ def ASSIGNMENT(current, G):
 	t.children.append(child)
 	s.update(s1)
 	if not current.name == "ASSIGNOP":
-		raise ParserError("Syntax Error: Assignment operator does not follow identifer in assignment statement" + getTokenLineInfo(current))
+		raise ParserError("Syntax Error: Assignment operator does not follow identifier in assignment statement" + getTokenLineInfo(current))
 	current, child, s1 = EXPRESSION(next(G), G) # should return something that follows expression - we will check for it in whereever this function returns
 	t.children.append(child) #child should be EXPRESSION tree
 	s.update(s1)
@@ -160,14 +160,6 @@ def EXPR_LIST(current, G):
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s # should return a ; (if called from ASSIGNMENT) or return ) (if called from STATEMENT)
-
-def IDENT(current, G):
-	t = tree("IDENT")
-	s = {current.pattern: None}
-	if not current.name == "ID":
-		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
-	t.children.append(tree("ID"))
-	return next(G), t, s
 
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
@@ -201,12 +193,19 @@ def PRIMARY(current, G):
 		return current, t, s # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "INTLIT":
-		# process the INTLIT here when building tree before returning the next (G)
-		t.children.append(tree("INTLIT"))
+		t.children.append(tree("INTLIT", val = current.pattern))
 		return next(G), t, s # should return something in {"," , ; , ) , + , -}
 
 	else:
 		raise ParserError("Syntax Error: Inappropriate starting token in primary" + getTokenLineInfo(current))
+
+def IDENT(current, G):
+	t = tree("IDENT")
+	s = {current.pattern: 0}
+	if not current.name == "ID":
+		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
+	t.children.append(tree("ID", val = current.pattern))
+	return next(G), t, s
 
 #the tree form for this one is different than the others because your tests skipped the ARITH_OP nodes and went
 #straight to the "PLUS" "MINUS" options
