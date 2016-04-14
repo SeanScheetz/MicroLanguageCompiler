@@ -94,4 +94,4 @@ def lexer(source_file, token_file):
 					colnum += (match.end(1) - match.start(1)) + (len(startline) - len(line)) #length of match + whitespace before next token
 					break
 				if index+1 == len(regexs): #if no match after checking the last element of the regexs list
-					raise LexerError("invalid token - line " + str(linenum) + " column " + str(colnum))
+					raise LexerError("Lexical Error: invalid token - line " + str(linenum) + " column " + str(colnum))
