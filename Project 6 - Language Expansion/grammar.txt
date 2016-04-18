@@ -19,7 +19,7 @@
 
 <bool_expr>	->	<term1> { or <term1> }
 <term1>     -> 	<fact1> { and <fact1> }
-<fact1>     -> 	<exp2> R
+<fact1>     -> 	<exp2> <relation> | not <exp2> <relation>
 <relation>  ->	 RELATIONOP <exp2> | lambda
 <exp2>      -> 	<term2> { + <term2> }
 <term2>     -> 	<fact2> { * <fact2> }
