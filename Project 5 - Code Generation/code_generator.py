@@ -28,6 +28,9 @@ def start(s, outfile):
 	outfile.write("\t.data\n") #start of the data section
 	convert_symbol_table(outfile, s) #write symbol table to .data section
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n") #user instruction
+	outfile.write("sum_stack:\t.word\t0:20\n") #write partial sum to this stack during expression recursion - max 20 recursions
+	outfile.write("var_stack:\t.word\t0:20\n") #write variables waiting to be added/subtracted to this stack when recurse - e.g. 4 + (3 + 2) would right 4 to this stack
+	outfile.write("address_counter:\t.word\t0\n") #keeps track of where the stack address is for the current recursion
 	outfile.write("\n")
 
 	outfile.write("\t.text\n")
@@ -60,25 +63,31 @@ def assign(node, outfile):
 	store_expression_result(node.children[1], outfile) #children[1] will always be <expression>, stored in $t0
 	outfile.write("sw\t$t0, " + ident + "\n")
 
-#stores the result of the expression in $t0 !!!
 #this is infix from your augmented grammar
+#$t0 will accumulate the value (hold the result)
+#$t1 will hold the number waiting to be added/subtracted
 def store_expression_result(node, outfile):
-	outfile.write("li\t$t0, 0\n") #$t1 is going to accumulate the value
+	outfile.write("li\t$t0, 0\n") #$t0 is going to accumulate the value
+	add = True #add the first number
 	for child in node.children:
-		if node.label == "PRIMARY": #if we need to recursively call store_expression_result write off the current values
-			for primary_child in child:
+		if child.label == "PRIMARY":
+			for primary_child in child.children:
 				if primary_child.label == "IDENT":
-					outfile.write("sw\t$t1, " + primary_child.val)
+					outfile.write("sw\t$t1, " + primary_child.val + "\n")
 				if primary_child.label == "INTLIT":
-					outfile.write("li\t$t1, " + primary_child.val)
+					outfile.write("li\t$t1, " + primary_child.val + "\n")
+					if add:
+						outfile.write("add\t$t0, $t0, $t1" + "\n")
+					else: #subtract
+						outfile.write("sub\t$t0, $t0, $t1" + "\n")
 				if primary_child.label == "EXPRESSION": #problem with current method is $t8 and $t9 will get over written if more than 1 recursive call
 					#save values from current expression call in different variable
-					outfile.write("move\t$t0, $t8") #$t8 now holds the current sum
-					outfile.write("move\t$t1, $t9") #$t9 now holds the number waiting to be added 2 (e.g. if we are doing 2 + (1 + 3) then $t1 had 2 in it
+					outfile.write("move\t$t0, $t8\n") #$t8 now holds the current sum
+					outfile.write("move\t$t1, $t9\n") #$t9 now holds the number waiting to be added 2 (e.g. if we are doing 2 + (1 + 3) then $t1 had 2 in it
 					#make recursive expression call
 					store_expression_result(primary_child, outfile)
 					#reset values and add the value gotten from the recursive call to the value total
-		if node.label == "PLUS":
-			outfile.write("add\t$t0, $t0, $t1")
-		if node.label == "MINUS":
-			outfile.write("sub\t$t0, $t0, $t1")
+		if child.label == "PLUS":
+			add = True
+		if child.label == "MINUS":
+			add = False

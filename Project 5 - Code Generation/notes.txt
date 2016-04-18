@@ -1,4 +1,4 @@
-Implementation of Expression (#infix) is tricky
+HOW TO RECURSIVELY SOLVE #INFIX (RECURSIVE EPRESSIONS)
 I can't think of a solution where my variables don't eventually get overwritten
 1 + (3 + (4 + (3 + 1)))
 I will eventually run out of registers for an arbitrary number of nested expressions..
@@ -12,3 +12,5 @@ IS THERE AN EASY WAY TO PRINT A DYNAMIC STRING?
 e.g. I need to prompt the user to enter an int for each variable being read in.
 Right now I am just saying "Enter an int:"
 How can I do "Enter an int to store in x" and "Enter an int to store in y"
+
+RIGHT NOW WE CAN ONLY HAVE 20 RECURSIONS IN AN EXPRESSION
