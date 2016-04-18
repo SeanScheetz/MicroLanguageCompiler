@@ -188,11 +188,13 @@ def PRIMARY(current, G):
 
 	elif current.name == "ID":
 		current, child, s1 = IDENT(current, G) #IDENT processes the ID and returns next token
+		t.val = child.val
 		t.children.append(child)
 		s.update(s1)
 		return current, t, s # should return something in {"," , ; , ) , + , -}
 
 	elif current.name == "INTLIT":
+		t.val = current.pattern
 		t.children.append(tree("INTLIT", val = current.pattern))
 		return next(G), t, s # should return something in {"," , ; , ) , + , -}
 
@@ -204,6 +206,7 @@ def IDENT(current, G):
 	s = {current.pattern: 0}
 	if not current.name == "ID":
 		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
+	t.val = current.pattern
 	t.children.append(tree("ID", val = current.pattern))
 	return next(G), t, s
 

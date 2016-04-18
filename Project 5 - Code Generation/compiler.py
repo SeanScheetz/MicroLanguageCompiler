@@ -1,29 +1,20 @@
 import sys
 import argparse
+import MLparser
+import code_generator
 
 def compiler(source, tokens, output):
-	pass
+	t, s = MLparser.parser(source, tokens)
 
-def start():
-	pass
+	outfile = open(output, "w")
+	outfile.write(".data\n") #start of the data section
+	code_generator.convert_symbol_table(outfile, s)
 
-def finish():
-	pass
+	G = code_generator.traverse_tree(t)
 
-def read_ids():
-	pass
+	for node in G:
+		code_generator.generate_code(node, outfile)
 
-def write_ids():
-	pass
-
-def assign():
-	pass
-
-def infix():
-	pass
-
-def process():
-	pass
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":

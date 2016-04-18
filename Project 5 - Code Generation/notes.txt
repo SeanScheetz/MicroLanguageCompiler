@@ -1,0 +1,9 @@
+Implementation of Expression (#infix) is tricky
+I can't think of a solution where my variables don't eventually get overwritten
+1 + (3 + (4 + (3 + 1)))
+I will eventually run out of registers for an arbitrary number of nested expressions..
+Impossible to solve the expression before the mips code is written (in the python) because
+I won't know the state of the identifiers at the time
+POSSIBLE SOLUTION: Keep a stack of operators and values as a .data member of the
+POSSIBLE SOLUTION: Initialize 2 arrays with 100 values in .data . Recursion limit is 100
+1 array for sums and 1 array for num in $t1
