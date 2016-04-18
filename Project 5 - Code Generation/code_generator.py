@@ -117,4 +117,4 @@ class SemanticError(Exception):
 #s is the symbol table
 def check_if_var_init(ident, s):
 	if not s[ident] == 1:
-		raise SemanticError("Semantic Error: Attempted to use variable " + ident + " without initializing it.")
+		raise SemanticError("Semantic Error: Attempted to use variable " + ident + " without prior initialization.")

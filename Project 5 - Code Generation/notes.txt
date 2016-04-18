@@ -26,3 +26,5 @@ And then you eliminate those from the stack with addi $sp, $sp, 8
 QUESTION FOR KARRO
 Is it wrong to implement the semantic checking the way I did (in the code generator)? Are there any
 alternatives?
+Should I be worried about getting the line number for the semantic error because I no longer have access to the token
+stream?
