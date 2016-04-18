@@ -16,7 +16,7 @@ How can I do "Enter an int to store in x" and "Enter an int to store in y"
 RIGHT NOW WE CAN ONLY HAVE 20 RECURSIONS IN AN EXPRESSION
 
 
-SETHS STACK POINTER ADVICE
+STACK POINTER IDEA - Credit to Seth Scheetz for telling me this is the proper way to do recursion with MIPS
 its hard to explain though. $sp starts at the top of the array. then say you want to store two values
 on it per recursive cycle. You would say addi $sp, $sp, -8. Then to store the first value (say it's in $t0)
 you use sw $t0, 0($sp) and to store the second value you use sw $t1, 4($sp)
