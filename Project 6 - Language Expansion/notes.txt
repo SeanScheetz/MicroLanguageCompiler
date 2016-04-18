@@ -1,0 +1,30 @@
+HOW TO RECURSIVELY SOLVE #INFIX (RECURSIVE EPRESSIONS)
+I can't think of a solution where my variables don't eventually get overwritten
+1 + (3 + (4 + (3 + 1)))
+I will eventually run out of registers for an arbitrary number of nested expressions..
+Impossible to solve the expression before the mips code is written (in the python) because
+I won't know the state of the identifiers at the time
+POSSIBLE SOLUTION: Keep a stack of operators and values as a .data member of the
+POSSIBLE SOLUTION: Initialize 2 arrays with 100 values in .data . Recursion limit is 100
+1 array for sums and 1 array for num in $t1
+
+IS THERE AN EASY WAY TO PRINT A DYNAMIC STRING?
+e.g. I need to prompt the user to enter an int for each variable being read in.
+Right now I am just saying "Enter an int:"
+How can I do "Enter an int to store in x" and "Enter an int to store in y"
+
+RIGHT NOW WE CAN ONLY HAVE 20 RECURSIONS IN AN EXPRESSION
+
+
+STACK POINTER IDEA - Credit to Seth Scheetz for telling me this is the proper way to do recursion with MIPS
+its hard to explain though. $sp starts at the top of the array. then say you want to store two values
+on it per recursive cycle. You would say addi $sp, $sp, -8. Then to store the first value (say it's in $t0)
+you use sw $t0, 0($sp) and to store the second value you use sw $t1, 4($sp)
+Then you have something at the end of the recursion where it can do lw $t0, 0($sp) and lw $t1, 4($sp).
+And then you eliminate those from the stack with addi $sp, $sp, 8
+
+QUESTION FOR KARRO
+Is it wrong to implement the semantic checking the way I did (in the code generator)? Are there any
+alternatives?
+Should I be worried about getting the line number for the semantic error because I no longer have access to the token
+stream?

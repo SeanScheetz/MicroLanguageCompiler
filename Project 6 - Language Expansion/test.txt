@@ -1,0 +1,6 @@
+begin
+x := 7;
+y := 8;
+z := *;
+write(x, y);
+end
