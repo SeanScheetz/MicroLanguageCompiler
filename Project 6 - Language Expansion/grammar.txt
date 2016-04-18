@@ -13,7 +13,7 @@
 <ident>	->	ID #process
 <arith op>	->	+ | - | / | * | %
 <string>	->	STRINGLIT | <ident> #checkforstringtype
-<write_list>	-> [expr_list|ident|STRINGLIT|BOOLLIT|bool_expr] { , [expr_list|ident|STRINGLIT|BOOLLIT|bool_expr]}
+<write_list>	-> [expr_list|<ident>|<string>|BOOLLIT|bool_expr] { , [expr_list|ident|<string>|BOOLLIT|bool_expr]}
 
 ----------Everything below this line is a boolean expression-----------
 
@@ -23,4 +23,4 @@
 <relation>  ->	 RELATIONOP <exp2> | lambda
 <exp2>      -> 	<term2> { + <term2> }
 <term2>     -> 	<fact2> { * <fact2> }
-<fact2>     -> 	ID | INTLIT | BOOLLIT | (exp1)
+<fact2>     -> 	ID | INTLIT | BOOLLIT | (<bool_expr>)
