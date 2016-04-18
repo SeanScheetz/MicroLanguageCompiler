@@ -6,22 +6,22 @@ according to the language definition.
 
 ## Grammar
 
-<program>	->	begin <statement list> end
+PROGRAM	->	begin STATEMENT_LIST end
 
-<statement list>	->	<statement>; { <statement>; }
+STATEMENT_LIST	->	STATEMENT; { STATEMENT; }
 
-<statement>	->	<assignment> | read( <id list> ) | write( <expr list> )
+STATEMENT	->	ASSIGNMENT| read( ID_LIST ) | write( EXPR_LIST )
 
-<assignment>	->	<ident> := <expression>
+ASSIGNMENT|	->	IDENT := EXPRESSION
 
-<id list>	->	<ident> {, <ident>}
+ID_LIST	->	IDENT {, IDENT}
 
-<expr list>	->	<expression> {, <expression> }
+EXPR_LIST	->	EXPRESSION {, EXPRESSION }
 
-<expression>	->	<primary> {<arith op> <primary> }
+EXPRESSION	->	PRIMARY {ARITH_OP PRIMARY }
 
-<primary>	->	( <epxerssion> ) | <ident> | INTLITERAL
+PRIMARY	->	( EXPRESSION ) | IDENT | intliteral (intlit is a terminal)
 
-<ident>	->	ID  (that is, an ID token)
+IDENT	->	id  (id is a terminal)
 
-<arith op>	->	+ | -
+ARITH_OP	->	+ | -

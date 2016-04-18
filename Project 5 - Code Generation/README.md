@@ -15,24 +15,24 @@ Defaults
 
 ## Augmented Grammar
 
-<program>	->	#start begin <statement list> end #finish
+PROGRAM	-> #start	begin STATEMENT_LIST end #finish
 
-<statement list>	->	<statement>; { <statement>; }
+STATEMENT_LIST	->	STATEMENT; { STATEMENT; #read_ids}
 
-<statement>	 ->	<assignment> | read( <id list> #read_ids ) | write( <expr list> #write_ids )
+STATEMENT	->	ASSIGNMENT| read( ID_LIST ) | write( EXPR_LIST #write_ids)
 
-<assignment>	->	<ident> := <expression> #assign
+ASSIGNMENT|	->	IDENT := EXPRESSION #assign
 
-<id list>	->	<ident> {, <ident>}
+ID_LIST	->	IDENT {, IDENT}
 
-<expr list>	->	<expression> {, <expression> }
+EXPR_LIST	->	EXPRESSION {, EXPRESSION }
 
-<expression>	->	<primary> {<arith op> <primary> #infix }
+EXPRESSION	->	PRIMARY {ARITH_OP PRIMARY } #solve_expression
 
-<primary>	->	( <expression> ) | <ident> | INTLITERAL
+PRIMARY	->	( EXPRESSION ) | IDENT | intliteral (intlit is a terminal)
 
-<ident>	->	ID #process
+IDENT	->	id  (id is a terminal) #process
 
-<arith op>	->	+ | -
+ARITH_OP	->	+ | -
 
-**#process is handled in the parser
+**#process is actually done in the parser
