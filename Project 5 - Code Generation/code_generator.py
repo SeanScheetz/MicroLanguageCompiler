@@ -40,6 +40,7 @@ def finish(outfile):
 	outfile.close()
 
 def read_ids(node, outfile):
+	outfile.write("# Reading values for an <id_list>.\n")
 	for child in node.children:
 		#prompt user for int
 		outfile.write("li\t$v0, 4\n") #4 is the syscall to print a str
@@ -52,6 +53,7 @@ def read_ids(node, outfile):
 		outfile.write("sw\t$v0, " + child.val + "\n\n") #store val in $v0 in the memory allocated to the variable
 
 def write_ids(node, outfile):
+	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
 		outfile.write("li\t$v0, 1\n") #1 is the syscall to print an int
 		store_expression_result(child, outfile) #stores result of the child expression in $t0
@@ -60,8 +62,9 @@ def write_ids(node, outfile):
 
 def assign(node, outfile):
 	ident = node.children[0].val #children[0] will always be <ident>
+	outfile.write("# assign value to " + ident + ".\n")
 	store_expression_result(node.children[1], outfile) #children[1] will always be <expression>, stored in $t0
-	outfile.write("sw\t$t0, " + ident + "\n")
+	outfile.write("sw\t$t0, " + ident + "\n\n")
 
 #this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
@@ -73,7 +76,11 @@ def store_expression_result(node, outfile):
 		if child.label == "PRIMARY":
 			for primary_child in child.children:
 				if primary_child.label == "IDENT":
-					outfile.write("sw\t$t1, " + primary_child.val + "\n")
+					outfile.write("lw\t$t1, " + primary_child.val + "\n")
+					if add:
+						outfile.write("add\t$t0, $t0, $t1" + "\n")
+					else: #subtract
+						outfile.write("sub\t$t0, $t0, $t1" + "\n")
 				if primary_child.label == "INTLIT":
 					outfile.write("li\t$t1, " + primary_child.val + "\n")
 					if add:
