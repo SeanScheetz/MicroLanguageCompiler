@@ -14,3 +14,11 @@ Right now I am just saying "Enter an int:"
 How can I do "Enter an int to store in x" and "Enter an int to store in y"
 
 RIGHT NOW WE CAN ONLY HAVE 20 RECURSIONS IN AN EXPRESSION
+
+
+SETHS STACK POINTER ADVICE
+its hard to explain though. $sp starts at the top of the array. then say you want to store two values
+on it per recursive cycle. You would say addi $sp, $sp, -8. Then to store the first value (say it's in $t0)
+you use sw $t0, 0($sp) and to store the second value you use sw $t1, 4($sp)
+Then you have something at the end of the recursion where it can do lw $t0, 0($sp) and lw $t1, 4($sp).
+And then you eliminate those from the stack with addi $sp, $sp, 8
