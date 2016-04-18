@@ -7,13 +7,10 @@ def compiler(source, tokens, output):
 	t, s = MLparser.parser(source, tokens)
 
 	outfile = open(output, "w")
-	outfile.write(".data\n") #start of the data section
-	code_generator.convert_symbol_table(outfile, s)
 
 	G = code_generator.traverse_tree(t)
-
 	for node in G:
-		code_generator.generate_code(node, outfile)
+		code_generator.generate_code(node, s, outfile)
 
 
 # Only true if compiler.py invoked from the command line

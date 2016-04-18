@@ -1,20 +1,12 @@
-#param: file - file being written to
-#param: symbol_table - symbol table being written to .data section of mips output file
-#Note: we use .word as the data type being an int is 4 bytes and a word is 4 bytes
-def convert_symbol_table(outfile, symbol_table):
-	for identifier in symbol_table:
-		outfile.write(identifier + ":\t.word\t" + str(symbol_table[identifier]) + "\n")
-	outfile.write("\n")
-
 #Generator - returns nodes while progressing through a depth first search of the tree, t
 def traverse_tree(t):
 	yield t
 	for child in t.children:
 		yield from traverse_tree(child)
 
-def generate_code(node, outfile):
+def generate_code(node, s, outfile):
 	if node.label == "BEGIN":
-		start(outfile)
+		start(s, outfile)
 	if node.label == "END":
 		finish(outfile)
 	if node.label == "STATEMENT":
@@ -25,8 +17,20 @@ def generate_code(node, outfile):
 		if node.children[0].label == "WRITE":
 			write_ids(node.children[1], outfile) #node.children[1] will always be <expr_list> here
 
-def start(outfile):
-	outfile.write(".text\n")
+#param: file - file being written to
+#param: symbol_table - symbol table being written to .data section of mips output file
+#Note: we use .word as the data type being an int is 4 bytes and a word is 4 bytes
+def convert_symbol_table(outfile, symbol_table):
+	for identifier in symbol_table:
+		outfile.write(identifier + ":\t.word\t" + str(symbol_table[identifier]) + "\n")
+
+def start(s, outfile):
+	outfile.write("\t.data\n") #start of the data section
+	convert_symbol_table(outfile, s) #write symbol table to .data section
+	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n") #user instruction
+	outfile.write("\n")
+
+	outfile.write("\t.text\n")
 	outfile.write("main:\n")
 
 def finish(outfile):
@@ -34,9 +38,15 @@ def finish(outfile):
 
 def read_ids(node, outfile):
 	for child in node.children:
+		#prompt user for int
+		outfile.write("li\t$v0, 4\n") #4 is the syscall to print a str
+		outfile.write("la\t$a0, prompt_int\n") #loads starting address of prompt string into $a0 (arg 0)
+		outfile.write("syscall\n")
+
+		#read int
 		outfile.write("li\t$v0, 5\n") #5 is the syscall to read an int
 		outfile.write("syscall\n") #after syscall, $v0 holds the int read in
-		outfile.write("sw\t$v0, " + child.val + "\n") #store val in $v0 in the memory allocated to the variable
+		outfile.write("sw\t$v0, " + child.val + "\n\n") #store val in $v0 in the memory allocated to the variable
 
 def write_ids(node, outfile):
 	for child in node.children:
@@ -53,7 +63,7 @@ def assign(node, outfile):
 #stores the result of the expression in $t0 !!!
 #this is infix from your augmented grammar
 def store_expression_result(node, outfile):
-	outfile.write("li\t$t0, 0") #$t1 is going to accumulate the value
+	outfile.write("li\t$t0, 0\n") #$t1 is going to accumulate the value
 	for child in node.children:
 		if node.label == "PRIMARY": #if we need to recursively call store_expression_result write off the current values
 			for primary_child in child:

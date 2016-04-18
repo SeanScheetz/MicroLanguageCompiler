@@ -7,3 +7,8 @@ I won't know the state of the identifiers at the time
 POSSIBLE SOLUTION: Keep a stack of operators and values as a .data member of the
 POSSIBLE SOLUTION: Initialize 2 arrays with 100 values in .data . Recursion limit is 100
 1 array for sums and 1 array for num in $t1
+
+IS THERE AN EASY WAY TO PRINT A DYNAMIC STRING?
+e.g. I need to prompt the user to enter an int for each variable being read in.
+Right now I am just saying "Enter an int:"
+How can I do "Enter an int to store in x" and "Enter an int to store in y"
