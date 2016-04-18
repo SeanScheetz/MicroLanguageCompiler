@@ -7,7 +7,7 @@
 <assignment>	->	string <ident> := <string> #assign	|	int <ident> := <expression> #assign
 						|	bool <ident> := <bool_expr> #assign
 <id list>	->	<ident> {, <ident>}
-<expr list>	->	<expression> {, <expression> }
+<expr_list>	->	<expression> {, <expression> }
 <expression>	->	<primary> {<arith op> <primary> #infix }
 <primary>	->	( <epxerssion> ) | <ident> | INTLITERAL
 <ident>	->	ID #process
