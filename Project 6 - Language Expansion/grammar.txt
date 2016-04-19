@@ -1,4 +1,3 @@
-
 <program>	->	#start begin <statement list> end #finish
 <statement list> -> <statement>; { <statement>; }
 <statement>	->	<assignment> | read( <id list> ) #read_ids | write( <expr list> ) #write_ids | <decl>
@@ -8,14 +7,17 @@
 <id list>	->	<ident> {, <ident>}
 <expr list>	->	<expression> {, <expression> }
 <expression>->	<primary> {<arith op> <primary> #infix }
-<primary>	->	( <expression> ) | <ident> | INTLITERAL | STRINGLIT
+<primary>	->	( <expression> ) | <ident> | ( <bool expr> ) | INTLIT | STRINGLIT | BOOLLIT
 <ident>	    ->	ID #process
 <arith op>	->	+ | - | / | * | %
 <bool expr>	->	<term1> { or <term1> }
 <term1>     -> 	<fact1> { and <fact1> }
-<fact1>     ->  not <primary> | not ( <bool expr> )
-<fact1>     -> 	<exp2> <relation> | not <exp2> <relation>
-<relation>  ->	 RELATIONOP <exp2> | lambda
+<fact1>     ->  not <primary> | <exp2> <relation>
+<relation>  ->	RELATIONOP <exp2> | lambda
 <exp2>      -> 	<term2> { + <term2> }
-<term2>     -> 	<fact2> { * <fact2> }
-<fact2>     -> 	ID | INTLIT | BOOLLIT | (<bool expr>)
+<term2>     -> 	<sign> <fact2> { * <sign> <fact2> }
+<sign>      ->  - | lambda
+<fact2>     -> 	<ident> | INTLIT | BOOLLIT | (<bool expr>)
+
+NOTE: the "-" symbol is used in both <sign> and <arith op>. They will both be characterized as the same symbol, but
+I think this is okay because we can just do different things based on the function we are in.
