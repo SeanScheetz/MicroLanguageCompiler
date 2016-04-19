@@ -1,26 +1,21 @@
 
 <program>	->	#start begin <statement list> end #finish
-<statement list>	->	<statement>; { <statement>; }
-<statement>	->	<assignment> |
-    read( <id list> #read_ids ) |
-    write( <write_list> #write_ids )
-<assignment>	->	string <ident> := <string> #assign	|	int <ident> := <expression> #assign
-						|	bool <ident> := <bool_expr> #assign
+<statement list> -> <statement>; { <statement>; }
+<statement>	->	<assignment> | read( <id list> ) #read_ids | write( <expr list> ) #write_ids | <decl>
+<assignment>-> <ident> := <expression> #assign
+<decl>      -> <type> <ident>
+<type>      -> string | int | bool
 <id list>	->	<ident> {, <ident>}
-<expr_list>	->	<expression> {, <expression> }
-<expression>	->	<primary> {<arith op> <primary> #infix }
-<primary>	->	( <epxerssion> ) | <ident> | INTLITERAL
-<ident>	->	ID #process
+<expr list>	->	<expression> {, <expression> }
+<expression>->	<primary> {<arith op> <primary> #infix }
+<primary>	->	( <expression> ) | <ident> | INTLITERAL | STRINGLIT
+<ident>	    ->	ID #process
 <arith op>	->	+ | - | / | * | %
-<string>	->	STRINGLIT | <ident> #checkforstringtype
-<write_list>	-> [expr_list|<ident>|<string>|BOOLLIT|bool_expr] { , [expr_list|ident|<string>|BOOLLIT|bool_expr]}
-
-----------Everything below this line is a boolean expression-----------
-
-<bool_expr>	->	<term1> { or <term1> }
+<bool expr>	->	<term1> { or <term1> }
 <term1>     -> 	<fact1> { and <fact1> }
+<fact1>     ->  not <primary> | not ( <bool expr> )
 <fact1>     -> 	<exp2> <relation> | not <exp2> <relation>
 <relation>  ->	 RELATIONOP <exp2> | lambda
 <exp2>      -> 	<term2> { + <term2> }
 <term2>     -> 	<fact2> { * <fact2> }
-<fact2>     -> 	ID | INTLIT | BOOLLIT | (<bool_expr>)
+<fact2>     -> 	ID | INTLIT | BOOLLIT | (<bool expr>)
