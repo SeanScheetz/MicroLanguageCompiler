@@ -119,6 +119,9 @@ def STATEMENT(current, G):
 			raise ParserError("Syntax Error: Missing closing ) in WRITE statement" + getTokenLineInfo(current))
 		return next(G), t, s  #next(G) should be a ;
 
+	elif current.name == "":
+
+
 	else:
 		raise ParserError("Syntax Error: Inappproriate token to start a statement" + getTokenLineInfo(current))
 
