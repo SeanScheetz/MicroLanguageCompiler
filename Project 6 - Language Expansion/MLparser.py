@@ -119,8 +119,11 @@ def STATEMENT(current, G):
 			raise ParserError("Syntax Error: Missing closing ) in WRITE statement" + getTokenLineInfo(current))
 		return next(G), t, s  #next(G) should be a ;
 
-	elif current.name == "":
-
+	elif current.t_class == "TYPE":
+		current, child, s1 = DECLARATION(current, G) # DECLARATION returns a next(G)
+		t.children.append(child)
+		s.update(s1)
+		return current, t, s # #current should be a ; at this point
 
 	else:
 		raise ParserError("Syntax Error: Inappproriate token to start a statement" + getTokenLineInfo(current))
@@ -163,6 +166,29 @@ def EXPR_LIST(current, G):
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s # should return a ; (if called from ASSIGNMENT) or return ) (if called from STATEMENT)
+
+def DECLARATION(current, G):
+	#only way to get here it if STATEMENT sees a token with t_class = "TYPE" so don't need to check again here
+	t = tree("DECLARATION")
+	s = {}
+	current, child, s1 = TYPE(current, G) #TYPE returns next(G) because it processes the type token
+	t.children.append(child)
+	s.update(s1)
+	current, child, s1 = IDENT(current, G) #IDENT returns next(G) because it processes the identifier
+	t.children.append(child)
+	s.update(s1)
+	return current, t, s
+
+def TYPE(current, G):
+	t = tree("TYPE")
+	s = {}
+	if current.name == "STRING":
+		t.children.append(tree("STRING"))
+	elif current.name == "INT":
+		t.children.append(tree("INT"))
+	elif current.name == "BOOL":
+		t.children.append(tree("BOOL"))
+	return next(G), t, s
 
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
