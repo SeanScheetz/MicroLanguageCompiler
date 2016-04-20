@@ -227,6 +227,16 @@ def PRIMARY(current, G):
 		t.children.append(tree("INTLIT", val = current.pattern))
 		return next(G), t, s # should return something in {"," , ; , ) , + , -}
 
+	elif current.name == "BOOLLIT":
+		t.val = current.pattern
+		t.children.append(tree("BOOLLIT", val = current.pattern))
+		return next(G), t, s
+
+	elif current.name == "STRINGLIT":
+		t.val = current.pattern
+		t.children.append(tree("STRINGLIT"), val = current.pattern)
+		return next(G), t, s
+
 	else:
 		raise ParserError("Syntax Error: Inappropriate starting token in primary" + getTokenLineInfo(current))
 
