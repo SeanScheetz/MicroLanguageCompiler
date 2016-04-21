@@ -218,7 +218,22 @@ def TERM1(current, G):
 		s.update(s1)
 	return current, t, s # current should be in {),;}
 
-
+def FACT1(current, G):
+	t = tree("FACT1")
+	s = {}
+	if current.name == "NOT":
+		current, child, s1 = PRIMARY(next(G), G)
+		t.children.append(child)
+		s.update(s1)
+		return current, t, s
+	else: #doing error checking at lowest level because first set for FACT1 is too big
+		current, child, s1 = EXP2(next(G), G) #EXP2 needs to return a useful current
+		t.children.append(child)
+		s.update(s1)
+		current, child, s1 = RELATION(current, G) #relation needs to return a useful current
+		t.children.update(child)
+		s.update(s1)
+		return current, child, s1
 
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
