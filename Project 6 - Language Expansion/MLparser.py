@@ -193,16 +193,15 @@ def TYPE(current, G):
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
 	s = {}
-	current, child, s1 = PRIMARY(current, G) #should return something in { "," , ; , ) , + , - }
+	current, child, s1 = TERM1(current, G) #term1 should return next(G) in current setup
 	t.children.append(child)
 	s.update(s1)
-	while current.t_class == "ARITHOP": # loop until what is returned is not an arithop (we are chaining expressions e.g. (1+2)+12-13 etc.
-		current, child = ARITH_OP(current, G)
-		t.children.append(child)
-		current, child, s1 = PRIMARY(current, G)
+	while current.name == "OR":
+		current = next(G) #move to token after "or"
+		current, child, s1 = TERM1(current, G)
 		t.children.append(child)
 		s.update(s1)
-	return current, t, s #current should be in { "," , ; , ) } - ";" gets checked in STATEMENT_LIST, "," gets checked in EPRS_LIST, and ) gets checked in STATEMENT
+	return current, t, s # current should be in {),;}
 
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
