@@ -193,15 +193,32 @@ def TYPE(current, G):
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
 	s = {}
-	current, child, s1 = TERM1(current, G) #term1 should return next(G) in current setup
+	current, child, s1 = TERM1(current, G) #term1 should return next(G) I think? in current setup, we are doing error checking at lowest level
 	t.children.append(child)
 	s.update(s1)
 	while current.name == "OR":
+		t.children.append("OR")
 		current = next(G) #move to token after "or"
 		current, child, s1 = TERM1(current, G)
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s # current should be in {),;}
+
+def TERM1(current, G):
+	t = tree("TERM1")
+	s = {}
+	current, child, s1 = FACT1(current, G)
+	t.children.append(child)
+	s.update(s1)
+	while current.name == "AND":
+		t.children.append("AND")
+		current = next(G) #move to token after "and"
+		current, child, s1 = FACT1(current, G)
+		t.children.append(child)
+		s.update(s1)
+	return current, t, s # current should be in {),;}
+
+
 
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
