@@ -278,9 +278,7 @@ def TERM2(current, G):
 		current, child, s1 = FACT2(current, G)
 		t.children.append(child)
 		s.update(s1)
-	return current, t, s
-	
-	
+	return current, t, s	
 
 def SIGN(current, G):
 	t = tree("SIGN")
@@ -294,6 +292,29 @@ def SIGN(current, G):
 	else:
 		t.val = "+"
 		return current, t, s
+
+def FACT2(current, G):
+	t = tree("FACT2")
+	s = {}
+	if current.name = "INTLIT":
+		t.val = current.pattern
+		t.children.append(tree("INTLIT", val = current.pattern)
+		return next(G), t, s
+	elif current.name = "BOOLLIT":
+		t.val = current.pattern
+		t.children.append(tree("BOOLLIT", val = current.pattern)
+		return next(G), t, s
+	elif current.name = "LPAREN":
+		current, child, s1 = EXPRESSION(next(G), G)
+		t.children.append(child)
+		s.update(s1)
+		return current, t, s
+	else:
+		current, child, s1 = IDENT(current, G)
+		t.children.append(child)
+		s.update(s1)
+		return current, t, s
+		
 		
 		
 		
