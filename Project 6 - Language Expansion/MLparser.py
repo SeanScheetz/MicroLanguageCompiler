@@ -234,6 +234,23 @@ def FACT1(current, G):
 		t.children.update(child)
 		s.update(s1)
 		return current, child, s1
+		
+def RELATION(current, G):
+	t = tree("RELATION")
+	s = {}
+	if current.name == "RELATIONOP":
+		t.val = current.pattern
+		t.children.append(tree("RELATIONOP", val = current.pattern)
+		current, child, s1 = EXP2(next(G), G)
+		t.children.append(child)
+		s.update(s1)
+		return current, child, s
+	else:
+		return next(G), child, s
+		
+		
+		
+		
 
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
