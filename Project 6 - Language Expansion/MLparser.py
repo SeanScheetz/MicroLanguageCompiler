@@ -254,7 +254,7 @@ def EXP2(current, G):
 	current, child, s1 = TERM2(current, G)
 	t.children.append(child)
 	s.update(s1)
-	while current.name == "ARITHOP"
+	while current.name == "ARITHOP":
 		t.children.append(tree("ARITHOP", val = current.pattern)
 		current, child, s1 = TERM2(next(G), G)
 		t.children.append(child)
@@ -270,7 +270,7 @@ def TERM2(current, G):
 	current, child, s1 = FACT2(current, G)
 	t.children.append(child)
 	s.update(s1)
-	while current.name == "ARITHOP"
+	while current.name == "ARITHOP":
 		t.children.append(tree("ARITHOP", val = current.pattern)
 		current, child, s1 = SIGN(current, G)
 		t.children.append(child)
@@ -283,7 +283,7 @@ def TERM2(current, G):
 def SIGN(current, G):
 	t = tree("SIGN")
 	s = {}
-	if current.name == "ARITHOP"
+	if current.name == "ARITHOP":
 		if current.pattern == "-":
 			t.val = "-"
 			return next(G), t, s
@@ -314,9 +314,6 @@ def FACT2(current, G):
 		t.children.append(child)
 		s.update(s1)
 		return current, t, s
-		
-		
-		
 		
 
 def PRIMARY(current, G):
