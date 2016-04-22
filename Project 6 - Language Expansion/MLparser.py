@@ -261,6 +261,24 @@ def EXP2(current, G):
 		s.update(s1)
 	return current, child, s1
 		
+def TERM2(current, G):
+	t = tree("TERM2")
+	s = {}
+	current, child, s1 = SIGN(current, G)
+	t.children.append(child)
+	s.update(s1)
+	current, child, s1 = FACT2(current, G)
+	t.children.append(child)
+	s.update(s1)
+	while current.name == "ARITHOP"
+		t.children.append(tree("ARITHOP", val = current.pattern)
+		current, child, s1 = SIGN(current, G)
+		t.children.append(child)
+		s.update(s1)
+		current, child, s1 = FACT2(current, G)
+		t.children.append(child)
+		s.update(s1)
+	return current, t, s1
 	
 		
 		
