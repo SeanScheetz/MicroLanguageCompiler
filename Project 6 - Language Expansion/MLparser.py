@@ -279,6 +279,22 @@ def TERM2(current, G):
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s
+	
+	
+
+def SIGN(current, G):
+	t = tree("SIGN")
+	s = {}
+	if current.name == "ARITHOP"
+		if current.pattern == "-":
+			t.val = "-"
+			return next(G), t, s
+		else:
+			raise ParserError("Syntax Error: Symbol is unacceptable for sign identifier. Identifier = " + current.pattern + ", Acceptable signs: -")
+	else:
+		t.val = "+"
+		return current, t, s
+		
 		
 		
 
