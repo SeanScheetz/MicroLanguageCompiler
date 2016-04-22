@@ -244,9 +244,9 @@ def RELATION(current, G):
 		current, child, s1 = EXP2(next(G), G)
 		t.children.append(child)
 		s.update(s1)
-		return current, child, s
+		return current, t, s
 	else:
-		return next(G), child, s
+		return next(G), t, s
 		
 def EXP2(current, G):
 	t = tree("EXP2")
@@ -259,7 +259,7 @@ def EXP2(current, G):
 		current, child, s1 = TERM2(next(G), G)
 		t.children.append(child)
 		s.update(s1)
-	return current, child, s1
+	return current, t, s
 		
 def TERM2(current, G):
 	t = tree("TERM2")
@@ -278,8 +278,7 @@ def TERM2(current, G):
 		current, child, s1 = FACT2(current, G)
 		t.children.append(child)
 		s.update(s1)
-	return current, t, s1
-	
+	return current, t, s
 		
 		
 
