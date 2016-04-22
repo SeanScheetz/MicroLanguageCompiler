@@ -231,9 +231,9 @@ def FACT1(current, G):
 		t.children.append(child)
 		s.update(s1)
 		current, child, s1 = RELATION(current, G) #relation needs to return a useful current
-		t.children.update(child)
+		t.children.update(child) #Is this supposed to be append??
 		s.update(s1)
-		return current, child, s1
+		return current, child, s1  #should this not return s instead of s1? 
 		
 def RELATION(current, G):
 	t = tree("RELATION")
@@ -248,7 +248,20 @@ def RELATION(current, G):
 	else:
 		return next(G), child, s
 		
+def EXP2(current, G):
+	t = tree("EXP2")
+	s = {}
+	current, child, s1 = TERM2(current, G)
+	t.children.append(child)
+	s.update(s1)
+	while current.name == "ARITHOP"
+		t.children.append(tree("ARITHOP", val = current.pattern)
+		current, child, s1 = TERM2(next(G), G)
+		t.children.append(child)
+		s.update(s1)
+	return current, child, s1
 		
+	
 		
 		
 
