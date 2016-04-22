@@ -6,16 +6,15 @@
 <type>      -> string | int | bool
 <id list>	->	<ident> {, <ident>}
 <expr list>	->	<expression> {, <expression> }
-<primary>	->	( <expression> ) | <ident> | INTLIT | STRINGLIT | BOOLLIT
 <ident>	    ->	ID #process
 <expression>->	<term1> { or <term1> }
 <term1>     -> 	<fact1> { and <fact1> }
-<fact1>     ->  not <primary> | <exp2> <relation>
+<fact1>     ->  not <fact2> | <exp2> <relation>
 <relation>  ->	RELATIONOP <exp2> | lambda
 <exp2>      -> 	<term2> { [+|-] <term2> }
 <term2>     -> 	<sign> <fact2> { [*|/|%] <sign> <fact2> }
 <sign>      ->  - | lambda
-<fact2>     -> 	<ident> | INTLIT | BOOLLIT | (<expression>)
+<fact2>     -> 	<ident> | INTLIT | BOOLLIT | STRINGLIT | (<expression>)
 
 NOTE: the "-" symbol is used in both <sign> and <arith op>. They will both be characterized as the same symbol, but
 I think this is okay because we can just do different things based on the function we are in.

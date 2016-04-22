@@ -5,7 +5,7 @@ import code_generator
 
 def compiler(source, tokens, output):
 	t, s = MLparser.parser(source, tokens)
-
+	print(t)
 	outfile = open(output, "w")
 
 	G = code_generator.traverse_tree(t)

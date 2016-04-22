@@ -222,12 +222,12 @@ def FACT1(current, G):
 	t = tree("FACT1")
 	s = {}
 	if current.name == "NOT":
-		current, child, s1 = PRIMARY(next(G), G)
+		current, child, s1 = FACT2(next(G), G)
 		t.children.append(child)
 		s.update(s1)
 		return current, t, s
 	else: #doing error checking at lowest level because first set for FACT1 is too big
-		current, child, s1 = EXP2(next(G), G) #EXP2 needs to return a useful current
+		current, child, s1 = EXP2(current, G) #EXP2 needs to return a useful current
 		t.children.append(child)
 		s.update(s1)
 		current, child, s1 = RELATION(current, G) #relation needs to return a useful current
@@ -240,13 +240,13 @@ def RELATION(current, G):
 	s = {}
 	if current.name == "RELATIONOP":
 		t.val = current.pattern
-		t.children.append(tree("RELATIONOP", val = current.pattern)
-		current, child, s1 = EXP2(next(G), G)
+		t.children.append(tree("RELATIONOP", val = current.pattern))
+		current, child, s1 = EXP2(next(G), G) #assume exp2 returns a useful current
 		t.children.append(child)
 		s.update(s1)
 		return current, t, s
 	else:
-		return next(G), t, s
+		return current, t, s
 		
 def EXP2(current, G):
 	t = tree("EXP2")
@@ -254,9 +254,12 @@ def EXP2(current, G):
 	current, child, s1 = TERM2(current, G)
 	t.children.append(child)
 	s.update(s1)
-	while current.name == "ARITHOP":
-		t.children.append(tree("ARITHOP", val = current.pattern)
-		current, child, s1 = TERM2(next(G), G)
+	while current.name == "PLUS" or current.name == "MINUS":
+		if current.name == "PLUS":
+			t.children.append(tree("PLUS"))
+		else: #only other option is "MINUS"
+			t.children.append(tree("MINUS"))
+		current, child, s1 = TERM2(next(G), G) #current returned by TERM2 must be useful
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s
@@ -264,18 +267,23 @@ def EXP2(current, G):
 def TERM2(current, G):
 	t = tree("TERM2")
 	s = {}
-	current, child, s1 = SIGN(current, G)
+	current, child, s1 = SIGN(current, G) #assumes sign returns useful current
 	t.children.append(child)
 	s.update(s1)
 	current, child, s1 = FACT2(current, G)
 	t.children.append(child)
 	s.update(s1)
-	while current.name == "ARITHOP":
-		t.children.append(tree("ARITHOP", val = current.pattern)
-		current, child, s1 = SIGN(current, G)
+	while current.name == "TIMES" or current.name == "DIVIDE" or current.name == "MODULO":
+		if current.name == "TIMES":
+			t.children.append(tree("TIMES"))
+		elif current.name == "DIVIDE":
+			t.children.append(tree("DIVIDE"))
+		else: #current.name == "MODULO"
+			t.children.append(tree("MODULO"))
+		current, child, s1 = SIGN(next(G), G)
 		t.children.append(child)
 		s.update(s1)
-		current, child, s1 = FACT2(current, G)
+		current, child, s1 = FACT2(current, G) #Assumes FACT2 returns useful current
 		t.children.append(child)
 		s.update(s1)
 	return current, t, s	
@@ -283,39 +291,54 @@ def TERM2(current, G):
 def SIGN(current, G):
 	t = tree("SIGN")
 	s = {}
-	if current.name == "ARITHOP":
-		if current.pattern == "-":
-			t.val = "-"
+	if current.t_class == "ARITHOP":
+		if current.name == "MINUS":
+			t.children.append(tree("MINUS"))
 			return next(G), t, s
 		else:
-			raise ParserError("Syntax Error: Symbol is unacceptable for sign identifier. Identifier = " + current.pattern + ", Acceptable signs: -")
+			raise ParserError("Syntax Error: Invalid sign for number." + getTokenLineInfo(current) )
 	else:
-		t.val = "+"
+		t.children.append(tree("LAMBDA"))
 		return current, t, s
 
 def FACT2(current, G):
 	t = tree("FACT2")
 	s = {}
-	if current.name = "INTLIT":
-		t.val = current.pattern
-		t.children.append(tree("INTLIT", val = current.pattern)
-		return next(G), t, s
-	elif current.name = "BOOLLIT":
-		t.val = current.pattern
-		t.children.append(tree("BOOLLIT", val = current.pattern)
-		return next(G), t, s
-	elif current.name = "LPAREN":
+	if current.name == "LPAREN":
 		current, child, s1 = EXPRESSION(next(G), G)
 		t.children.append(child)
 		s.update(s1)
-		return current, t, s
-	else:
-		current, child, s1 = IDENT(current, G)
+		if not current.name == "RPAREN":
+			raise ParserError("Syntax Error: Expression not followed by matching ')' (in primary function)" + getTokenLineInfo(current))
+		return next(G), t, s # should return something in {"," , ; , ) , + , -}
+
+	elif current.name == "ID":
+		current, child, s1 = IDENT(current, G) #IDENT processes the ID and returns next token
+		t.val = child.val
 		t.children.append(child)
 		s.update(s1)
-		return current, t, s
+		return current, t, s # should return something in {"," , ; , ) , + , -}
+
+	elif current.name == "INTLIT":
+		t.val = current.pattern
+		t.children.append(tree("INTLIT", val = current.pattern))
+		return next(G), t, s # should return something in {"," , ; , ) , + , -}
+
+	elif current.name == "BOOLLIT":
+		t.val = current.pattern
+		t.children.append(tree("BOOLLIT", val = current.pattern))
+		return next(G), t, s
+
+	elif current.name == "STRINGLIT":
+		t.val = current.pattern
+		t.children.append(tree("STRINGLIT", val = current.pattern))
+		return next(G), t, s
+
+	else:
+		raise ParserError("Syntax Error: Inappropriate starting token in FACT2" + getTokenLineInfo(current))
 		
 
+#REPLACED WITH FACT2
 def PRIMARY(current, G):
 	t = tree("PRIMARY")
 	s = {}
@@ -346,6 +369,7 @@ def PRIMARY(current, G):
 
 	elif current.name == "STRINGLIT":
 		t.val = current.pattern
+		print(t)
 		t.children.append(tree("STRINGLIT"), val = current.pattern)
 		return next(G), t, s
 
