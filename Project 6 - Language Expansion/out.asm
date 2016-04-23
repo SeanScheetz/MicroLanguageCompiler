@@ -8,3 +8,12 @@ main:
 li		$t0, 0
 sw		$t0, x
 
+# Writing values of an <expr_list>.
+li		$v0, 1
+li		$t0, 0
+move	$a0, $t0
+syscall
+li		$v0, 1
+li		$t0, 0
+move	$a0, $t0
+syscall

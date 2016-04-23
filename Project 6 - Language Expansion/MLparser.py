@@ -197,7 +197,7 @@ def EXPRESSION(current, G):
 	t.children.append(child)
 	s.update(s1)
 	while current.name == "OR":
-		t.children.append("OR")
+		t.children.append(tree("OR"))
 		current = next(G) #move to token after "or"
 		current, child, s1 = TERM1(current, G)
 		t.children.append(child)
@@ -211,7 +211,7 @@ def TERM1(current, G):
 	t.children.append(child)
 	s.update(s1)
 	while current.name == "AND":
-		t.children.append("AND")
+		t.children.append(tree("AND"))
 		current = next(G) #move to token after "and"
 		current, child, s1 = FACT1(current, G)
 		t.children.append(child)
@@ -238,7 +238,7 @@ def FACT1(current, G):
 def RELATION(current, G):
 	t = tree("RELATION")
 	s = {}
-	if current.name == "RELATIONOP":
+	if current.t_class == "RELATIONOP":
 		t.val = current.pattern
 		t.children.append(tree("RELATIONOP", val = current.pattern))
 		current, child, s1 = EXP2(next(G), G) #assume exp2 returns a useful current

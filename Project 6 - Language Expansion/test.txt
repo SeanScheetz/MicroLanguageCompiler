@@ -1,3 +1,4 @@
 begin
-x := False;
+x := not(x + 5 == 4);
+write(x, not(x+5 == 4));
 end
