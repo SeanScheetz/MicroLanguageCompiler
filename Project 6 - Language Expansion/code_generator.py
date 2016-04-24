@@ -106,28 +106,28 @@ def solve_expression(node, s, outfile):
     startnode = node
     if len(node.children) > 1:
         # EXPRESSION node
-        return "bool", parentnode
+        return "bool", startnode
     else:
         # TERM1 node
         node = node.children[0]
         if len(node.children) > 1:
-            return "bool", parentnode
+            return "bool", startnode
         else:
             # FACT1 node
             node = node.children[0]
             if node.children[0].label == "NOT":
-                return "bool", parentnode
+                return "bool", startnode
             elif node.children[1].children[0].label == "RELATIONOP":
-                return "bool", parentnode
+                return "bool", startnode
             else:
                 # EXP2 node
                 node = node.children[0]
                 if len(node.children) > 1:
-                    return "int", parentnode
+                    return "int", startnode
                 else:
                     node = node.children[0]
                     if len(node.children) > 2:
-                        return "int", parentnode
+                        return "int", startnode
                     else:
                         node = node.children[1]
                         if node.children[0].label == "IDENT":
@@ -140,11 +140,10 @@ def solve_expression(node, s, outfile):
                             exprtype = "string"
                         else:
                             exprtype = solve_expression(node, s, outfile)
-                        return exprtype, parentnode
+                        return exprtype, startnode
+
 # this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
-
-
 def solve_math_expression(node, s, outfile):
     outfile.write("li\t\t$t0, 0\n")  # $t0 is going to accumulate the value
     plus = True  # add the first number
