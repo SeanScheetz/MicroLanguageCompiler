@@ -222,7 +222,7 @@ def FACT1(current, G):
 	t = tree("FACT1")
 	s = {}
 	if current.name == "NOT":
-		t.children.append(tree("AND"))
+		t.children.append(tree("NOT"))
 		current, child, s1 = FACT2(next(G), G)
 		t.children.append(child)
 		s.update(s1)
