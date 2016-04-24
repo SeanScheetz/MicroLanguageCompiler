@@ -24,7 +24,7 @@ def generate_code(node, s, outfile):
 #Note: we use .word as the data type being an int is 4 bytes and a word is 4 bytes
 def convert_symbol_table(outfile, symbol_table):
 	for identifier in symbol_table:
-		outfile.write(identifier + ":\t.word\t" + str(symbol_table[identifier]) + "\n")
+		outfile.write(identifier + ":\t.word\t" + str(symbol_table[identifier][1]) + "\n")
 
 def start(s, outfile):
 	outfile.write("\t.data\n") #start of the data section
