@@ -66,9 +66,12 @@ def declaration(node, s, outfile):
 	s[ident][0] = vartype
 	s[ident][1] = 1
 
-
 def assign(node, s, outfile):
 	ident = node.children[0].val #children[0] will always be <ident>
+	if s[ident][1] == 0:
+		raise SemanticError("Semantic Error: Use of variable " + ident + " without declaration.")
+	vartype = s[ident][0]
+
 	outfile.write("# assign value to " + ident + ".\n")
 	store_expression_result(node.children[1], s, outfile) #children[1] will always be <expression>, stored in $t0
 	outfile.write("sw\t\t$t0, " + ident + "\n\n")

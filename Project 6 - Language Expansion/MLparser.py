@@ -378,7 +378,7 @@ def PRIMARY(current, G):
 
 def IDENT(current, G):
 	t = tree("IDENT")
-	s = {current.pattern: ("", 0)}
+	s = {current.pattern: ["", 0]}
 	if not current.name == "ID":
 		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
 	t.val = current.pattern
