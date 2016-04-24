@@ -1,4 +1,4 @@
 begin
-x := not(x + 5 == 4);
-write(x, not(x+5 == 4));
+int x;
+x := 12;
 end

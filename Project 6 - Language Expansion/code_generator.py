@@ -16,6 +16,8 @@ def generate_code(node, s, outfile):
 			read_ids(node.children[1], s, outfile) #node.children[1] will always be <id_list> here
 		if node.children[0].label == "WRITE":
 			write_ids(node.children[1], s, outfile) #node.children[1] will always be <expr_list> here
+		if node.children[0].label == "DECLARATION":
+			declaration(node.children[0], s, outfile)
 
 #param: file - file being written to
 #param: symbol_table - symbol table being written to .data section of mips output file
@@ -58,12 +60,18 @@ def write_ids(node, s, outfile):
 		outfile.write("move\t$a0, $t0\n") #move the expression result (int to be printed) that is in $t0 into $a0 (argument 0)
 		outfile.write("syscall\n")
 
+def declaration(node, s, outfile):
+	vartype = node.children[0].label.lower()
+	ident = node.children[1].val
+	s[ident][0] = vartype
+	s[ident][1] = 1
+
+
 def assign(node, s, outfile):
 	ident = node.children[0].val #children[0] will always be <ident>
 	outfile.write("# assign value to " + ident + ".\n")
 	store_expression_result(node.children[1], s, outfile) #children[1] will always be <expression>, stored in $t0
 	outfile.write("sw\t\t$t0, " + ident + "\n\n")
-	s[ident] = 1
 
 #this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
@@ -116,5 +124,5 @@ class SemanticError(Exception):
 #checks if a var has been initialized
 #s is the symbol table
 def check_if_var_init(ident, s):
-	if not s[ident] == 1:
+	if not s[ident][1] == 1:
 		raise SemanticError("Semantic Error: Attempted to use variable " + ident + " without prior initialization.")
