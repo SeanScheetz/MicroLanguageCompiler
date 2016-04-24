@@ -56,7 +56,7 @@ def write_ids(node, s, outfile):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
 		outfile.write("li\t\t$v0, 1\n") #1 is the syscall to print an int
-		store_expression_result(child, s, outfile) #stores result of the child expression in $t0
+		solve_expression(child, s, outfile)
 		outfile.write("move\t$a0, $t0\n") #move the expression result (int to be printed) that is in $t0 into $a0 (argument 0)
 		outfile.write("syscall\n")
 
@@ -73,12 +73,15 @@ def assign(node, s, outfile):
 	vartype = s[ident][0]
 
 	outfile.write("# assign value to " + ident + ".\n")
-	store_expression_result(node.children[1], s, outfile) #children[1] will always be <expression>, stored in $t0
+	solve_expression(node.children[1], s, outfile) #children[1] will always be <expression>
 	outfile.write("sw\t\t$t0, " + ident + "\n\n")
+
+def solve_expression(node, s, outfile):
+	if node
 
 #this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
-def store_expression_result(node, s, outfile):
+def solve_math_expression(node, s, outfile):
 	outfile.write("li\t\t$t0, 0\n") #$t0 is going to accumulate the value
 	plus = True #add the first number
 	for child in node.children:
@@ -103,7 +106,7 @@ def store_expression_result(node, s, outfile):
 					outfile.write("addi\t$sp, $sp, -4\n") #-4 because we are going to push 1 word onto the stack
 					outfile.write("sw\t\t$t0, 0($sp)\n") # store the current sum
 					#make recursive expression call
-					store_expression_result(primary_child, s, outfile)
+					solve_math_expression(primary_child, s, outfile)
 					#restore sum from the stack and increment the stack point
 					outfile.write("lw\t\t$t2, 0($sp)\n")
 					outfile.write("addi\t$sp, $sp, 4\n")
