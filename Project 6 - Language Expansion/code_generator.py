@@ -7,10 +7,19 @@ def traverse_tree(t):
 	for child in t.children:
 		yield from traverse_tree(child)
 
-
-def generate_code(node, s, outfile):
+# generates the .data section - full traversal of the tree
+def generate_data(node, s, outfile):
 	if node.label == "BEGIN":
 		start(s, outfile)
+	if node.label == "DECLARATION":
+		if node.children[0].label == "INT" or node.children[0].label == "BOOL":
+			allocate_word(node.children[1], s, outfile)
+	if node.label == "ASSIGNMENT":
+		ident = node.children[0].val
+		s[ident]
+
+# generates the .text section - full traversal of the tree
+def generate_text(node, s, outfile):
 	if node.label == "END":
 		finish(outfile)
 	if node.label == "STATEMENT":
@@ -25,28 +34,11 @@ def generate_code(node, s, outfile):
 		if node.children[0].label == "DECLARATION":
 			declaration(node.children[0], s, outfile)
 
-# param: file - file being written to
-# param: symbol_table - symbol table being written to .data section of mips output file
-# Note: we use .word as the data type being an int is 4 bytes and a word
-# is 4 bytes
-
-
-def convert_symbol_table(outfile, symbol_table):
-	for identifier in symbol_table:
-		outfile.write(identifier + ":\t.word\t" +
-					  str(symbol_table[identifier][1]) + "\n")
-
-
 def start(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
-	convert_symbol_table(outfile, s)  # write symbol table to .data section
 	# user instruction
-	outfile.write(
-		"prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
+	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
 	outfile.write("\n")
-
-	outfile.write("\t.text\n")
-	outfile.write("main:\n")
 
 
 def finish(outfile):
@@ -219,3 +211,16 @@ def check_if_var_init(ident, s):
 	if not s[ident][1] == 1:
 		raise SemanticError("Semantic Error: Attempted to use variable " +
 							ident + " without prior initialization.")
+
+
+
+###############RETIRED FUNCTIONS################
+
+# param: file - file being written to
+# param: symbol_table - symbol table being written to .data section of mips output file
+# Note: we use .word as the data type being an int is 4 bytes and a word
+# is 4 bytes
+def convert_symbol_table(outfile, symbol_table):
+	for identifier in symbol_table:
+		outfile.write(identifier + ":\t.word\t" +
+					  str(symbol_table[identifier][1]) + "\n")

@@ -182,12 +182,12 @@ def DECLARATION(current, G):
 def TYPE(current, G):
 	t = tree("TYPE")
 	s = {}
-	if current.name == "STRING":
-		t.children.append(tree("STRING"))
-	elif current.name == "INT":
+	if current.name == "INT":
 		t.children.append(tree("INT"))
 	elif current.name == "BOOL":
 		t.children.append(tree("BOOL"))
+	elif current.name == "STRING":
+		t.children.append(tree("STRING"))
 	return next(G), t, s
 
 def EXPRESSION(current, G):

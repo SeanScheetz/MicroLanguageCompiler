@@ -10,8 +10,11 @@ def compiler(source, tokens, output):
 
 	G = code_generator.traverse_tree(t)
 	for node in G:
-		code_generator.generate_code(node, s, outfile)
+		code_generator.generate_data(node, s, outfile)
 
+	G = code_generator.traverse_tree(t)
+	for node in G:
+		code_generator.generate_text(node, s, outfile)
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":
