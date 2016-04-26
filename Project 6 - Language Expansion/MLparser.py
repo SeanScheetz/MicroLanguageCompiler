@@ -131,7 +131,7 @@ def STATEMENT(current, G):
 def ASSIGNMENT(current, G):
 	t = tree("ASSIGNMENT")
 	s = {}
-	current, child, s1 = IDENT(current, G) #should return a :=
+	current, child, s1 = IDENT(current, G)
 	t.children.append(child)
 	s.update(s1)
 	if not current.name == "ASSIGNOP":
@@ -184,13 +184,13 @@ def TYPE(current, G):
 	s = {}
 	if current.name == "INT":
 		t.children.append(tree("INT"))
-		return next(G), t, s, "int"
+		return next(G), t, s, "INT"
 	elif current.name == "BOOL":
 		t.children.append(tree("BOOL"))
-		return next(G), t, s, "bool"
+		return next(G), t, s, "BOOL"
 	elif current.name == "STRING":
 		t.children.append(tree("STRING"))
-		return next(G), t, s, "string"
+		return next(G), t, s, "STRING"
 
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
@@ -249,6 +249,7 @@ def RELATION(current, G):
 		s.update(s1)
 		return current, t, s
 	else:
+		t.children.append(tree("LAMBDA"))
 		return current, t, s
 		
 def EXP2(current, G):
@@ -379,9 +380,11 @@ def PRIMARY(current, G):
 	else:
 		raise ParserError("Syntax Error: Inappropriate starting token in primary" + getTokenLineInfo(current))
 
-def IDENT(current, G, vartype):
+def IDENT(current, G, vartype = "notype"):
 	t = tree("IDENT")
-	s = {current.pattern: [vartype, 0]}
+	s = {}
+	if not vartype == "notype":
+		s = {current.pattern: [vartype, 0]}
 	if not current.name == "ID":
 		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
 	t.val = current.pattern

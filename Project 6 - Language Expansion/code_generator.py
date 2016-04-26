@@ -1,6 +1,6 @@
 # Generator - returns nodes while progressing through a depth first search
 # of the tree, t
-global stringtable = {}
+
 
 def traverse_tree(t):
 	yield t
@@ -9,31 +9,37 @@ def traverse_tree(t):
 
 # generates the .data section - full traversal of the tree
 def generate_data(node, s, outfile):
+	global stringtable
+	stringtable = {}
 	if node.label == "BEGIN":
 		start(s, outfile)
 	if node.label == "DECLARATION":
-        # Mark the variable as declared
-        s[node.children[1].children[0].val][1] = 1
-		if node.children[0].label == "INT" or node.children[0].label == "BOOL":
+		# Mark the variable as declared
+		ident = node.children[1].children[0].val
+		if s[ident][1] == 1:
+			raise SemanticError("Semantic Error: " + ident + " was declared twice.")
+		s[ident][1] = 1
+		if node.children[0].children[0].label == "INT" or node.children[0].children[0].label == "BOOL":
 			allocate_word(node.children[1], s, outfile)
 	if node.label == "ASSIGNMENT":
-		ident = node.children[0].val
+		ident = node.children[0].children[0].val
 		type = s[ident][0]
 		if type == "STRING":
-     allocate_string(node, s, outfile)
+			allocate_string(node, s, outfile)
 
 def allocate_string(node, s, outfile):
-    global stringtable
-    typ = get_expression_type(node, s, outfile)
-    if typ != "STRING":
-        raise SemanticError("Semantic Error: Expected String, recieved " + typ
-    newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
-    if newnode.label == "STRINGLIT":
-        outfile.write(node.children[0].val + "\t.asciiz\t\"" + newnode.val + "\"\n")
-        stringtable[node.children[0].val] = newnode.val 
-    elif node.children[0].label == "IDENT":
-        outfile.write(node.children[0].val + "\t.asciiz\t\"" + stringtable[newnode.children[0].val] + "\"\n")
+	global stringtable
+	typ, startnode = get_expression_type(node.children[1], s, outfile)
+	if typ != "STRING":
+		raise SemanticError("Semantic Error: Expected String, received " + typ)
+	newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
+	if newnode.label == "STRINGLIT":
+		outfile.write(node.children[0].val + "\t.asciiz\t" + newnode.val + "\n")
+		stringtable[node.children[0].val] = newnode.val
+	elif node.children[0].label == "IDENT":
+		outfile.write(node.children[0].val + "\t.asciiz\t" + stringtable[newnode.children[0].val] + "\n")
 
+"""
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
 	if node.label == "END":
@@ -49,23 +55,19 @@ def generate_text(node, s, outfile):
 			write_ids(node.children[1], s, outfile)
 		if node.children[0].label == "DECLARATION":
 			declaration(node.children[0], s, outfile)
+"""
 
 def start(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
 	# user instruction
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
-	outfile.write("\n")
-
 
 def finish(outfile):
 	outfile.close()
 
 def allocate_word(node, s, outfile):
 	ident = node.children[0].val
-	if s[ident][1] == 1:
-		raise SemanticError("Semantic Error: " + ident + " was declared twice.")
-	s[ident][1] = 1 # 1 means the identifier has been declared
-	outfile(ident + ":\t.word\t0\n")
+	outfile.write(ident + ":\t.word\t0\n")
 
 def read_ids(node, s, outfile):
 	outfile.write("# Reading values for an <id_list>.\n")
@@ -83,7 +85,7 @@ def read_ids(node, s, outfile):
 		outfile.write("sw\t\t$v0, " + child.val + "\n\n")
 		s[child.val] = 1
 
-
+"""
 def write_ids(node, s, outfile):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
@@ -93,7 +95,7 @@ def write_ids(node, s, outfile):
 		# $a0 (argument 0)
 		outfile.write("move\t$a0, $t0\n")
 		outfile.write("syscall\n")
-
+"""
 
 def declaration(node, s, outfile):
 	vartype = node.children[0].label.lower()
@@ -101,7 +103,7 @@ def declaration(node, s, outfile):
 	s[ident][0] = vartype
 	s[ident][1] = 1
 
-
+"""
 def assign(node, s, outfile):
 	ident = node.children[0].val  # children[0] will always be <ident>
 	if s[ident][1] == 0:
@@ -123,50 +125,50 @@ def solve_expression(node, s, outfile):
 		solve_int_expression(node, s, outfile)
 	if type == "string":
 		solve_string_expression(node, s, outfile)
-
+"""
 
 
 def get_expression_type(node, s, outfile):
 	startnode = node
 	if len(node.children) > 1:
 		# EXPRESSION node
-		return "bool", startnode
+		return "BOOL", startnode
 	else:
 		# TERM1 node
 		node = node.children[0]
 		if len(node.children) > 1:
-			return "bool", startnode
+			return "BOOL", startnode
 		else:
 			# FACT1 node
 			node = node.children[0]
 			if node.children[0].label == "NOT":
-				return "bool", startnode
+				return "BOOL", startnode
 			elif node.children[1].children[0].label == "RELATIONOP":
-				return "bool", startnode
+				return "BOOL", startnode
 			else:
 				# EXP2 node
 				node = node.children[0]
 				if len(node.children) > 1:
-					return "int", startnode
+					return "INT", startnode
 				else:
 					node = node.children[0]
 					if len(node.children) > 2:
-						return "int", startnode
+						return "INT", startnode
 					else:
 						node = node.children[1]
 						if node.children[0].label == "IDENT":
 							exprtype = s[node.children[0].val][0]
 						elif node.children[0].label == "INTLIT":
-							exprtype = "int"
+							exprtype = "INT"
 						elif node.children[0].label == "BOOLLIT":
-							exprtype = "bool"
+							exprtype = "BOOL"
 						elif node.children[0].label == "STRINGLIT":
-							exprtype = "string"
+							exprtype = "STRING"
 						else:
 							exprtype = get_expression_type(node, s, outfile)
 						return exprtype, startnode
 
-def solve_bool_expression(node, s, outfile):
+#def solve_bool_expression(node, s, outfile):
 
 # this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
@@ -214,8 +216,7 @@ def solve_int_expression(node, s, outfile):
 		if child.label == "MINUS":
 			plus = False
 
-def solve_string_expression(node, s, outfile):
-
+#def solve_string_expression(node, s, outfile):
 
 class SemanticError(Exception):
 

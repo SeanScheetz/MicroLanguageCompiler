@@ -1,4 +1,8 @@
 begin
 int x;
-x := True;
+bool c;
+string q;
+q := "hello kyle";
+string w;
+w := q;
 end
