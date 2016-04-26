@@ -1,6 +1,6 @@
 # Generator - returns nodes while progressing through a depth first search
 # of the tree, t
-
+global stringtable = {}
 
 def traverse_tree(t):
 	yield t
@@ -20,11 +20,19 @@ def generate_data(node, s, outfile):
 		ident = node.children[0].val
 		type = s[ident][0]
 		if type == "STRING":
-            allocate_string(node, s, outfile)
+     allocate_string(node, s, outfile)
 
 def allocate_string(node, s, outfile):
-    litlength = len(node.children[2].val)
-    outfile.write(node.children[0].val + "\t.space " + litlength) 
+    global stringtable
+    typ = get_expression_type(node, s, outfile)
+    if typ != "STRING":
+        raise SemanticError("Semantic Error: Expected String, recieved " + typ
+    newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
+    if newnode.label == "STRINGLIT":
+        outfile.write(node.children[0].val + "\t.asciiz\t\"" + newnode.val + "\"\n")
+        stringtable[node.children[0].val] = newnode.val 
+    elif node.children[0].label == "IDENT":
+        outfile.write(node.children[0].val + "\t.asciiz\t\"" + stringtable[newnode.children[0].val] + "\"\n")
 
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
