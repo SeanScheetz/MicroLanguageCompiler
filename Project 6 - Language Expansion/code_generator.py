@@ -12,12 +12,19 @@ def generate_data(node, s, outfile):
 	if node.label == "BEGIN":
 		start(s, outfile)
 	if node.label == "DECLARATION":
+        # Mark the variable as declared
+        s[node.children[1].children[0].val][1] = 1
 		if node.children[0].label == "INT" or node.children[0].label == "BOOL":
 			allocate_word(node.children[1], s, outfile)
 	if node.label == "ASSIGNMENT":
 		ident = node.children[0].val
 		type = s[ident][0]
-		if type == ""
+		if type == "STRING":
+            allocate_string(node, s, outfile)
+
+def allocate_string(node, s, outfile):
+    litlength = len(node.children[2].val)
+    outfile.write(node.children[0].val + "\t.space " + litlength) 
 
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
