@@ -171,10 +171,10 @@ def DECLARATION(current, G):
 	#only way to get here it if STATEMENT sees a token with t_class = "TYPE" so don't need to check again here
 	t = tree("DECLARATION")
 	s = {}
-	current, child, s1 = TYPE(current, G) #TYPE returns next(G) because it processes the type token
+	current, child, s1, vartype = TYPE(current, G) #TYPE returns next(G) because it processes the type token
 	t.children.append(child)
 	s.update(s1)
-	current, child, s1 = IDENT(current, G) #IDENT returns next(G) because it processes the identifier
+	current, child, s1 = IDENT(current, G, vartype) #IDENT returns next(G) because it processes the identifier
 	t.children.append(child)
 	s.update(s1)
 	return current, t, s
@@ -184,11 +184,13 @@ def TYPE(current, G):
 	s = {}
 	if current.name == "INT":
 		t.children.append(tree("INT"))
+		return next(G), t, s, "int"
 	elif current.name == "BOOL":
 		t.children.append(tree("BOOL"))
+		return next(G), t, s, "bool"
 	elif current.name == "STRING":
 		t.children.append(tree("STRING"))
-	return next(G), t, s
+		return next(G), t, s, "string"
 
 def EXPRESSION(current, G):
 	t = tree("EXPRESSION")
@@ -377,9 +379,9 @@ def PRIMARY(current, G):
 	else:
 		raise ParserError("Syntax Error: Inappropriate starting token in primary" + getTokenLineInfo(current))
 
-def IDENT(current, G):
+def IDENT(current, G, vartype):
 	t = tree("IDENT")
-	s = {current.pattern: ["", 0]}
+	s = {current.pattern: [vartype, 0]}
 	if not current.name == "ID":
 		raise ParserError("Syntax Error: Invalid identifier" + getTokenLineInfo(current))
 	t.val = current.pattern

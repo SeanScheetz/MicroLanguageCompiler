@@ -16,7 +16,8 @@ def generate_data(node, s, outfile):
 			allocate_word(node.children[1], s, outfile)
 	if node.label == "ASSIGNMENT":
 		ident = node.children[0].val
-		s[ident]
+		type = s[ident][0]
+		if type == ""
 
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
