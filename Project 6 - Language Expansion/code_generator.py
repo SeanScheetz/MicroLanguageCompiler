@@ -52,6 +52,12 @@ def start(s, outfile):
 def finish(outfile):
 	outfile.close()
 
+def allocate_word(node, s, outfile):
+	ident = node.children[0].val
+	if s[ident][1] == 1:
+		raise SemanticError("Semantic Error: " + ident + " was declared twice.")
+	s[ident][1] = 1 # 1 means the identifier has been declared
+	outfile(ident + ":\t.word\t0\n")
 
 def read_ids(node, s, outfile):
 	outfile.write("# Reading values for an <id_list>.\n")
