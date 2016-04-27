@@ -42,22 +42,26 @@ def generate_text(node, s, outfile):
 	if node.label == "END":
 		finish(outfile)
 	if node.label == "STATEMENT":
-		if node.children[0].label == "ASSIGNMENT":
+		if node.children[0].label == "ASSIGNMENT": #depends on solve expression
 			assign(node.children[0], s, outfile)
 		if node.children[0].label == "READ":
 			# node.children[1] will always be <id_list> here
 			read_ids(node.children[1], s, outfile)
-		if node.children[0].label == "WRITE":
+		if node.children[0].label == "WRITE": #depends on solve expression
 			# node.children[1] will always be <expr_list> here
 			write_ids(node.children[1], s, outfile)
-		if node.children[0].label == "DECLARATION":
-			declaration(node.children[0], s, outfile)
 
 
 def start(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
 	# user instruction
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
+
+def declaration(node, s, outfile):
+	vartype = node.children[0].label.lower()
+	ident = node.children[1].val
+	s[ident][0] = vartype
+	s[ident][1] = 1
 
 def finish(outfile):
 	outfile.close()
@@ -92,37 +96,6 @@ def write_ids(node, s, outfile):
 		# $a0 (argument 0)
 		outfile.write("move\t$a0, $t0\n")
 		outfile.write("syscall\n")
-
-
-def declaration(node, s, outfile):
-	vartype = node.children[0].label.lower()
-	ident = node.children[1].val
-	s[ident][0] = vartype
-	s[ident][1] = 1
-
-
-def assign(node, s, outfile):
-	ident = node.children[0].val  # children[0] will always be <ident>
-	if s[ident][1] == 0:
-		raise SemanticError(
-			"Semantic Error: Use of variable " + ident + " without declaration.")
-	vartype = s[ident][0]
-
-	outfile.write("# assign value to " + ident + ".\n")
-	# children[1] will always be <expression>
-	solve_expression(node.children[1], s, outfile)
-	outfile.write("sw\t\t$t0, " + ident + "\n\n")
-
-
-def solve_expression(node, s, outfile):
-	type, startnode = get_expression_type(node, s, outfile)
-	if type == "bool":
-		solve_bool_expression(node, s, outfile)
-	if type == "int":
-		solve_int_expression(node, s, outfile)
-	if type == "string":
-		solve_string_expression(node, s, outfile)
-
 
 
 def get_expression_type(node, s, outfile):
@@ -165,7 +138,35 @@ def get_expression_type(node, s, outfile):
 							exprtype = get_expression_type(node, s, outfile)
 						return exprtype, startnode
 
-#def solve_bool_expression(node, s, outfile):
+
+def assign(node, s, outfile):
+	ident = node.children[0].val  # children[0] will always be <ident>
+	if s[ident][1] == 0:
+		raise SemanticError(
+			"Semantic Error: Use of variable " + ident + " without declaration.")
+	vartype = s[ident][0]
+
+	outfile.write("# assign value to " + ident + ".\n")
+	# children[1] will always be <expression>
+	solve_expression(node.children[1], s, outfile)
+	outfile.write("sw\t\t$t0, " + ident + "\n\n")
+
+
+def solve_expression(node, s, outfile):
+	vartype, startnode = get_expression_type(node, s, outfile)
+	if vartype == "BOOL":
+		solve_bool_expression(node, s, outfile)
+	if vartype == "INT":
+		solve_int_expression(node, s, outfile)
+	if vartype == "STRING":
+		solve_string_expression(node, s, outfile)
+
+def solve_bool_expression(node, s, outfile):
+	if node.label == "TERM1"
+	if node.val == "True":
+		return "TRUE"
+	else:
+		return "FALSE"
 
 # this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
