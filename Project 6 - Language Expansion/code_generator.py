@@ -162,11 +162,38 @@ def solve_expression(node, s, outfile):
 		solve_string_expression(node, s, outfile)
 
 def solve_bool_expression(node, s, outfile):
-	if node.label == "TERM1"
-	if node.val == "True":
-		return "TRUE"
+
+	if node.children[0].label == "TERM1":
+		#if we see an or then logically or them
+		if(len(node.children) >1):
+			return solve_bool_expression(node.children[0],s, outfile) or solve_bool_expression(node.children[2], s, outfile)
+		else:
+			return solve_bool_expression(node.children[0],s, outfile)
+	elif node.children[0].label == "FACT1":
+		if(len(node.children) >1):
+			return solve_bool_expression(node.children[0],s,outfile) and solve_bool_expression(node.children[2],s,outfile)
+		else:
+            return solve_bool_expression(node.children[0], s , outfile)
+    elif node.children[0].label == "NOT":
+        return not solve_bool_expression(node.children[1], s , outfile)
+    elif node.children[0].label == "EXPR2":
+        if node.children[1].children[0].label == "LAMBDA":
+            solve_bool_expression(node.children[0], s, outfile)
+        elif node.children[1].children[0].label == "RELATIONOP":
+            return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node,children[1].children[1], s, outfile))
+
+    elif node.label = "FACT2":
+        if node.children[0].label == "IDENT":
+            return s[node.children[0].val][1]
+        elif node.children[0].label == "BOOLLIT":
+            if node.children[0].val =="True":
+                return True
+            elif node.children[0].val =="False":
+                return False
+        elif node.children[0].label == "EXPRESSION":
+            return solve_bool_expression(node.children[0], s, outfile)
 	else:
-		return "FALSE"
+        #semantic error not boolean logic within grammar.
 
 # this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
@@ -233,6 +260,19 @@ def check_if_var_init(ident, s):
 		raise SemanticError("Semantic Error: Attempted to use variable " +
 							ident + " without prior initialization.")
 
+def parseOperator(expr1, opString, expr2):
+    if opString == "==":
+        return expr1 == expr2
+    elif opString == "!=":
+        return expr1 != expr2
+    elif opString == ">=":
+        return expr1 >= expr2
+    elif opString == "<=":
+        return expr1 <= expr2
+    elif opString == "<":
+        return expr1 < expr2
+    elif opString == ">":
+        return expr1 > expr2
 
 
 ###############RETIRED FUNCTIONS################
