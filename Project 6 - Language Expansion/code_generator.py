@@ -9,14 +9,12 @@ def traverse_tree(t):
 
 # generates the .data section - full traversal of the tree
 def generate_data(node, s, outfile):
-	global stringtable
-	stringtable = {}
 	if node.label == "BEGIN":
 		start(s, outfile)
 	if node.label == "DECLARATION":
 		# Mark the variable as declared
 		ident = node.children[1].children[0].val
-		if s[ident][1] == 1:
+		if s[ident][1] != 0:
 			raise SemanticError("Semantic Error: " + ident + " was declared twice.")
 		s[ident][1] = 1
 		if node.children[0].children[0].label == "INT" or node.children[0].children[0].label == "BOOL":
@@ -28,18 +26,17 @@ def generate_data(node, s, outfile):
 			allocate_string(node, s, outfile)
 
 def allocate_string(node, s, outfile):
-	global stringtable
 	typ, startnode = get_expression_type(node.children[1], s, outfile)
 	if typ != "STRING":
 		raise SemanticError("Semantic Error: Expected String, received " + typ)
 	newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
 	if newnode.label == "STRINGLIT":
-		outfile.write(node.children[0].val + "\t.asciiz\t" + newnode.val + "\n")
-		stringtable[node.children[0].val] = newnode.val
+		outfile.write(node.children[0].val + ":\t.asciiz\t" + newnode.val + "\n")
+		s[node.children[0].val][1] = newnode.val
 	elif node.children[0].label == "IDENT":
-		outfile.write(node.children[0].val + "\t.asciiz\t" + stringtable[newnode.children[0].val] + "\n")
+		ident = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
+		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + s[ident][1] + "\n")
 
-"""
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
 	if node.label == "END":
@@ -55,7 +52,7 @@ def generate_text(node, s, outfile):
 			write_ids(node.children[1], s, outfile)
 		if node.children[0].label == "DECLARATION":
 			declaration(node.children[0], s, outfile)
-"""
+
 
 def start(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
@@ -85,7 +82,7 @@ def read_ids(node, s, outfile):
 		outfile.write("sw\t\t$v0, " + child.val + "\n\n")
 		s[child.val] = 1
 
-"""
+
 def write_ids(node, s, outfile):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
@@ -95,7 +92,7 @@ def write_ids(node, s, outfile):
 		# $a0 (argument 0)
 		outfile.write("move\t$a0, $t0\n")
 		outfile.write("syscall\n")
-"""
+
 
 def declaration(node, s, outfile):
 	vartype = node.children[0].label.lower()
@@ -103,7 +100,7 @@ def declaration(node, s, outfile):
 	s[ident][0] = vartype
 	s[ident][1] = 1
 
-"""
+
 def assign(node, s, outfile):
 	ident = node.children[0].val  # children[0] will always be <ident>
 	if s[ident][1] == 0:
@@ -125,7 +122,7 @@ def solve_expression(node, s, outfile):
 		solve_int_expression(node, s, outfile)
 	if type == "string":
 		solve_string_expression(node, s, outfile)
-"""
+
 
 
 def get_expression_type(node, s, outfile):
