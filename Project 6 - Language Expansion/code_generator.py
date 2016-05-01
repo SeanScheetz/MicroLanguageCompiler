@@ -8,7 +8,7 @@ def traverse_tree(t):
 # generates the .data section - full traversal of the tree
 def generate_data(node, s, outfile):
 	if node.label == "BEGIN":
-		start(s, outfile)
+		start_data(s, outfile)
 	if node.label == "DECLARATION":
 		# Mark the variable as declared
 		ident = node.children[1].children[0].val
@@ -19,8 +19,11 @@ def generate_data(node, s, outfile):
 			allocate_word(node.children[1], s, outfile)
 	if node.label == "ASSIGNMENT":
 		ident = node.children[0].children[0].val
-		type = s[ident][0]
-		if type == "STRING":
+		try:
+			vartype = s[ident][0]
+		except:
+			raise SemanticError("Semantic Error: Variable used before declaration.")
+		if vartype == "STRING":
 			allocate_string(node, s, outfile)
 
 def allocate_string(node, s, outfile):
@@ -37,6 +40,8 @@ def allocate_string(node, s, outfile):
 
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile):
+	if node.label == "BEGIN":
+		start_text(s, outfile)
 	if node.label == "END":
 		finish(outfile)
 	if node.label == "STATEMENT":
@@ -50,10 +55,14 @@ def generate_text(node, s, outfile):
 			write_ids(node.children[1], s, outfile)
 
 
-def start(s, outfile):
+def start_data(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
 	# user instruction
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
+
+def start_text(s, outfile):
+	outfile.write("\n")
+	outfile.write("\t.text\n")  # start of the data section
 
 def declaration(node, s, outfile):
 	vartype = node.children[0].label.lower()
@@ -88,12 +97,18 @@ def read_ids(node, s, outfile):
 def write_ids(node, s, outfile):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
+		#need to change the syscall based on the type that is being printed
 		outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
 		solve_expression(child, s, outfile)
 		# move the expression result (int to be printed) that is in $t0 into
 		# $a0 (argument 0)
 		outfile.write("move\t$a0, $t0\n")
 		outfile.write("syscall\n")
+
+		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
+		outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
+		outfile.write("syscall\n")
+
 
 
 def get_expression_type(node, s, outfile):
@@ -228,7 +243,7 @@ def int_expression_helper(node, s, outfile):
 
 		#add the first real number to the sum -rest of children need to be mult/divide/modulo
 		if i == 1:
-			solve_fact2(child, isNegative, s, outfile) #result is in $t2
+			solve_fact2(child.children[0], isNegative, s, outfile) #result is in $t2
 			outfile.write("add\t$t1, $t1, $t2\n")
 			continue
 
@@ -245,14 +260,14 @@ def int_expression_helper(node, s, outfile):
 			valnode = child.children[0]
 			solve_fact2(valnode, isNegative, s, outfile) #result is in $t2
 			if arithop == 0:
-				outfile.write("mult\t$t1, t2\n")
-				outfile.write("mfhi\t$t1\n")
+				outfile.write("mult\t$t1, $t2\n")
+				outfile.write("mflo\t$t1\n")
 			elif arithop == 1:
 				outfile.write("div\t$t1, $t2\n")
-				outfile.write("mfhi\t$t1\n")
+				outfile.write("mflo\t$t1\n")
 			else: #arithop ==2
 				outfile.write("div\t$t1, $t2\n")
-				outfile.write("mflo\t$t1\n")
+				outfile.write("mfhi\t$t1\n")
 
 #result of fact2 is stored in $t2
 def solve_fact2(node, isNegative, s, outfile):
@@ -265,18 +280,22 @@ def solve_fact2(node, isNegative, s, outfile):
 	if node.label == "EXPRESSION":
 		# write the current sum and number waiting to be added to the stack pointer $sp
 		outfile.write("addi\t$sp, $sp, -4\n")	# -4 because we are going to push 1 word onto the stack
-		outfile.write("sw\t\t$t0, 0($sp)\n")	# store the current sum
+		outfile.write("sw\t\t$t0, 0($sp)\n")	# store a partial sum
+		outfile.write("addi\t$sp, $sp, -4\n")	# -4 because we are going to push 1 word onto the stack
+		outfile.write("sw\t\t$t1, 0($sp)\n")	# store a partial quotient/product
 		# make recursive expression call
 		solve_int_expression(node, s, outfile) #sum of the recursive call is in $t0
-		outfile.write("move\t$t2, $t0") #moves the result of the recursive int expression into $t2
+		outfile.write("move\t$t2, $t0\n") #moves the result of the recursive int expression into $t2
 		# restore sum from the stack and increment the stack point
-		outfile.write("lw\t$t0, 0($sp)\n")	#$t0 now holds the sum before the recursive call
+		outfile.write("lw\t$t1, 0($sp)\n")	#$t1 now holds the partial quotient/product from before the recursive call
+		outfile.write("addi\t$sp, $sp, 4\n")
+		outfile.write("lw\t$t0, 0($sp)\n")	#$t0 now holds the partial sum before the recursive call
 		outfile.write("addi\t$sp, $sp, 4\n")
 		#4 lines up is basically the return of the function. The partial sum of the result is in $t2
 
 	if isNegative:
 		outfile.write("li\t$t6, 0\n") #this is for subtracting our positive number to get a negative version
-		outfile.write("sub\t$t2, $t6, $t2") #$t2 now holds the negative of the old $t2
+		outfile.write("sub\t$t2, $t6, $t2\n") #$t2 now holds the negative of the old $t2
 	#else $t2 is already correct
 
 class SemanticError(Exception):

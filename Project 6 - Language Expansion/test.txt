@@ -1,9 +1,9 @@
 begin
 int x;
-x := 12;
-bool c;
-string q;
-q := "hello kyle";
-string w;
-w := q;
+int y;
+int z;
+x := 15;
+y := 10;
+z := 10;
+write(y*-(x), 3*(-z));
 end
