@@ -170,30 +170,31 @@ def solve_bool_expression(node, s, outfile):
 		else:
 			return solve_bool_expression(node.children[0],s, outfile)
 	elif node.children[0].label == "FACT1":
-		if(len(node.children) >1):
+		if(len(node.children) > 1):
 			return solve_bool_expression(node.children[0],s,outfile) and solve_bool_expression(node.children[2],s,outfile)
 		else:
-            return solve_bool_expression(node.children[0], s , outfile)
-    elif node.children[0].label == "NOT":
-        return not solve_bool_expression(node.children[1], s , outfile)
-    elif node.children[0].label == "EXPR2":
-        if node.children[1].children[0].label == "LAMBDA":
-            solve_bool_expression(node.children[0], s, outfile)
-        elif node.children[1].children[0].label == "RELATIONOP":
-            return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node,children[1].children[1], s, outfile))
+			return solve_bool_expression(node.children[0], s , outfile)
+	elif node.children[0].label == "NOT":
+		return not solve_bool_expression(node.children[1], s , outfile)
+	elif node.children[0].label == "EXPR2":
+		if node.children[1].children[0].label == "LAMBDA":
+			solve_bool_expression(node.children[0], s, outfile)
+		elif node.children[1].children[0].label == "RELATIONOP":
+			return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node.children[1].children[1], s, outfile))
 
-    elif node.label = "FACT2":
-        if node.children[0].label == "IDENT":
-            return s[node.children[0].val][1]
-        elif node.children[0].label == "BOOLLIT":
-            if node.children[0].val =="True":
-                return True
-            elif node.children[0].val =="False":
-                return False
-        elif node.children[0].label == "EXPRESSION":
-            return solve_bool_expression(node.children[0], s, outfile)
+	elif node.label == "FACT2":
+		if node.children[0].label == "IDENT":
+			return s[node.children[0].val][1]
+		elif node.children[0].label == "BOOLLIT":
+			if node.children[0].val =="True":
+				return True
+			elif node.children[0].val =="False":
+				return False
+		elif node.children[0].label == "EXPRESSION":
+			return solve_bool_expression(node.children[0], s, outfile)
 	else:
-        #semantic error not boolean logic within grammar.
+		raise SemanticError("Semantic Error: Not boolean logic within grammar ")		#semantic error not boolean logic within grammar.
+		#dont think will happen with parser but cant hurt to throw it i suppose.
 
 # this is infix from your augmented grammar
 #$t0 will accumulate the value (hold the result)
@@ -261,18 +262,18 @@ def check_if_var_init(ident, s):
 							ident + " without prior initialization.")
 
 def parseOperator(expr1, opString, expr2):
-    if opString == "==":
-        return expr1 == expr2
-    elif opString == "!=":
-        return expr1 != expr2
-    elif opString == ">=":
-        return expr1 >= expr2
-    elif opString == "<=":
-        return expr1 <= expr2
-    elif opString == "<":
-        return expr1 < expr2
-    elif opString == ">":
-        return expr1 > expr2
+	if opString == "==":
+		return expr1 == expr2
+	elif opString == "!=":
+		return expr1 != expr2
+	elif opString == ">=":
+		return expr1 >= expr2
+	elif opString == "<=":
+		return expr1 <= expr2
+	elif opString == "<":
+		return expr1 < expr2
+	elif opString == ">":
+		return expr1 > expr2
 
 
 ###############RETIRED FUNCTIONS################
