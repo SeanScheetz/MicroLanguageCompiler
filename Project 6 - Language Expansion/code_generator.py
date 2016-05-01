@@ -156,6 +156,7 @@ def solve_expression(node, s, outfile):
 	if vartype == "INT":
 		solve_int_expression(node, s, outfile)
 
+
 def solve_bool_expression(node, s, outfile):
 
 	if node.children[0].label == "TERM1":
