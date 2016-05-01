@@ -196,6 +196,7 @@ def solve_bool_expression(node, s, outfile):
 			return solve_bool_expression(node.children[0], s, outfile)
 	else:
 		raise SemanticError("Semantic Error: Not valid boolean expression.")
+		#dont think will happen with parser but cant hurt to throw it i suppose.
 
 #<exp2> -> <term2> { [+|-] <term2> }
 #<term2>-> <sign> <fact2> { [*|/|%] <sign> <fact2> }
