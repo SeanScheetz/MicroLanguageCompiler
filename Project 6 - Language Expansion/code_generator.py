@@ -157,6 +157,8 @@ def solve_expression(node, s, outfile):
 	if vartype == "BOOL":
 		solve_bool_expression(node, s, outfile)
 	if vartype == "INT":
+		# pass the node where the integer expression starts - exp2 is the start of arithmetic expressions
+		node = node.children[0].children[0].children[0]
 		solve_int_expression(node, s, outfile)
 	if vartype == "STRING":
 		solve_string_expression(node, s, outfile)
@@ -165,83 +167,56 @@ def solve_bool_expression(node, s, outfile):
 
 	if node.children[0].label == "TERM1":
 		#if we see an or then logically or them
-		if(len(node.children) >1):
+		if len(node.children) > 1:
 			return solve_bool_expression(node.children[0],s, outfile) or solve_bool_expression(node.children[2], s, outfile)
 		else:
 			return solve_bool_expression(node.children[0],s, outfile)
 	elif node.children[0].label == "FACT1":
-		if(len(node.children) >1):
+		if len(node.children) > 1:
 			return solve_bool_expression(node.children[0],s,outfile) and solve_bool_expression(node.children[2],s,outfile)
 		else:
-            return solve_bool_expression(node.children[0], s , outfile)
-    elif node.children[0].label == "NOT":
-        return not solve_bool_expression(node.children[1], s , outfile)
-    elif node.children[0].label == "EXPR2":
-        if node.children[1].children[0].label == "LAMBDA":
-            solve_bool_expression(node.children[0], s, outfile)
-        elif node.children[1].children[0].label == "RELATIONOP":
-            return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node,children[1].children[1], s, outfile))
+			return solve_bool_expression(node.children[0], s , outfile)
+	elif node.children[0].label == "NOT":
+		return not solve_bool_expression(node.children[1], s , outfile)
+	elif node.children[0].label == "EXPR2":
+		if node.children[1].children[0].label == "LAMBDA":
+			solve_bool_expression(node.children[0], s, outfile)
+		elif node.children[1].children[0].label == "RELATIONOP":
+			return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node.children[1].children[1], s, outfile))
 
-    elif node.label = "FACT2":
-        if node.children[0].label == "IDENT":
-            return s[node.children[0].val][1]
-        elif node.children[0].label == "BOOLLIT":
-            if node.children[0].val =="True":
-                return True
-            elif node.children[0].val =="False":
-                return False
-        elif node.children[0].label == "EXPRESSION":
-            return solve_bool_expression(node.children[0], s, outfile)
+	elif node.label == "FACT2":
+		if node.children[0].label == "IDENT":
+			return s[node.children[0].val][1]
+		elif node.children[0].label == "BOOLLIT":
+			if node.children[0].val =="True":
+				return True
+			elif node.children[0].val =="False":
+				return False
+		elif node.children[0].label == "EXPRESSION":
+			return solve_bool_expression(node.children[0], s, outfile)
 	else:
-        #semantic error not boolean logic within grammar.
+		raise SemanticError("Semantic Error: Not valid boolean expression.")
 
-# this is infix from your augmented grammar
-#$t0 will accumulate the value (hold the result)
+#<exp2> -> <term2> { [+|-] <term2> }
+#<term2>-> <sign> <fact2> { [*|/|%] <sign> <fact2> }
+#<sign> -> - | lambda
+#<fact2>-> <ident> | INTLIT | BOOLLIT | STRINGLIT | (<expression>)
 def solve_int_expression(node, s, outfile):
-	outfile.write("li\t\t$t0, 0\n")  # $t0 is going to accumulate the value
 	plus = True  # add the first number
+	expr_sum = 0
 	for child in node.children:
-		if child.label == "PRIMARY":
-			for primary_child in child.children:
-				if primary_child.label == "IDENT":
-					# throws error if ident not initialized
-					check_if_var_init(primary_child.val, s)
-					outfile.write("lw\t\t$t1, " + primary_child.val + "\n")
-					if plus:
-						outfile.write("add\t\t$t0, $t0, $t1\n")
-					else:  # minus
-						outfile.write("sub\t\t$t0, $t0, $t1\n")
-				if primary_child.label == "INTLIT":
-					outfile.write("li\t\t$t1, " + primary_child.val + "\n")
-					if plus:
-						outfile.write("add\t\t$t0, $t0, $t1\n")
-					else:  # minus
-						outfile.write("sub\t\t$t0, $t0, $t1\n")
-				# ( 1 + (2 + (3 + 4) ) )
-				if primary_child.label == "EXPRESSION":
-					# write the current sum and number waiting to be added to
-					# the stack pointer $sp
-					# -4 because we are going to push 1 word onto the stack
-					outfile.write("addi\t$sp, $sp, -4\n")
-					# store the current sum
-					outfile.write("sw\t\t$t0, 0($sp)\n")
-					# make recursive expression call
-					solve_int_expression(primary_child, s, outfile)
-					# restore sum from the stack and increment the stack point
-					outfile.write("lw\t\t$t2, 0($sp)\n")
-					outfile.write("addi\t$sp, $sp, 4\n")
-					if plus:
-						# add old sum to the result of the recursion expression
-						outfile.write("add\t\t$t0, $t0, $t2\n")
-					else:  # subtract
-						# sub recursion result from old sum
-						outfile.write("sub\t\t$t0, $t2, $t0\n")
+		if child.label == "FACT":
+			if plus:
+				expr_sum += child.val
+			else:
+				expr_sum -= child.val
 		if child.label == "PLUS":
 			plus = True
 		if child.label == "MINUS":
 			plus = False
 
-#def solve_string_expression(node, s, outfile):
+def solve_string_expression(node, s, outfile):
+	pass
 
 class SemanticError(Exception):
 
@@ -261,18 +236,18 @@ def check_if_var_init(ident, s):
 							ident + " without prior initialization.")
 
 def parseOperator(expr1, opString, expr2):
-    if opString == "==":
-        return expr1 == expr2
-    elif opString == "!=":
-        return expr1 != expr2
-    elif opString == ">=":
-        return expr1 >= expr2
-    elif opString == "<=":
-        return expr1 <= expr2
-    elif opString == "<":
-        return expr1 < expr2
-    elif opString == ">":
-        return expr1 > expr2
+	if opString == "==":
+		return expr1 == expr2
+	elif opString == "!=":
+		return expr1 != expr2
+	elif opString == ">=":
+		return expr1 >= expr2
+	elif opString == "<=":
+		return expr1 <= expr2
+	elif opString == "<":
+		return expr1 < expr2
+	elif opString == ">":
+		return expr1 > expr2
 
 
 ###############RETIRED FUNCTIONS################
