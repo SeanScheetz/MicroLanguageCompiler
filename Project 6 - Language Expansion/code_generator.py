@@ -163,20 +163,6 @@ def solve_expression(node, s, outfile):
 	if vartype == "STRING":
 		solve_string_expression(node, s, outfile)
 
-def solve_string_expression(node, s, outfile):
-    try:
-        ret = node.children[0].children[0].children[0].children[0].children[1].children[0]
-        if ret.label == "IDENT":
-            if s[ret.children[0]][0] != "STRING":
-                raise SemanticError("Type Mismatch for String Assignment")
-            else:
-                return s[ret.children[0][1]]
-        elif ret.label == "STRINGLIT":
-            return ret.val
-        else:
-            raise SemanticError("Type Mismatch for String Assignment")
-    except KeyError:
-        raise SemanticError("Type Mismatch for String Assignment")
 
 def solve_bool_expression(node, s, outfile):
 
