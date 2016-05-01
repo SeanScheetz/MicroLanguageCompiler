@@ -390,16 +390,3 @@ def IDENT(current, G, vartype = "notype"):
 	t.val = current.pattern
 	t.children.append(tree("ID", val = current.pattern))
 	return next(G), t, s
-
-#the tree form for this one is different than the others because your tests skipped the ARITH_OP nodes and went
-#straight to the "PLUS" "MINUS" options
-#to add the ARITH_OP node add t = tree("ARITH_op") at the top and then append children to that tree in the ifs
-#don't need to update symbol table here because it is leaf node and no symbols will be found here
-def ARITH_OP(current, G):
-	# process the ARITHOP here when building tree before returning the next (G)
-	if current.name == "PLUS":
-		return next(G), tree("PLUS")
-	if current.name == "MINUS":
-		return next(G), tree("MINUS")
-	else: #this should never happen because only way to get to this function is if current is an arith op
-		raise ParserError("Syntax Error: Invalid ARITH_OP" + getTokenLineInfo(current))

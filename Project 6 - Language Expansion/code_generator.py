@@ -1,7 +1,5 @@
 # Generator - returns nodes while progressing through a depth first search
 # of the tree, t
-
-
 def traverse_tree(t):
 	yield t
 	for child in t.children:
@@ -32,7 +30,7 @@ def allocate_string(node, s, outfile):
 	newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
 	if newnode.label == "STRINGLIT":
 		outfile.write(node.children[0].val + ":\t.asciiz\t" + newnode.val + "\n")
-		s[node.children[0].val][1] = newnode.val
+		s[node.children[0].val][2] = newnode.val
 	elif node.children[0].label == "IDENT":
 		ident = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
 		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + s[ident][1] + "\n")
@@ -151,17 +149,12 @@ def assign(node, s, outfile):
 	solve_expression(node.children[1], s, outfile)
 	outfile.write("sw\t\t$t0, " + ident + "\n\n")
 
-
 def solve_expression(node, s, outfile):
 	vartype, startnode = get_expression_type(node, s, outfile)
 	if vartype == "BOOL":
 		solve_bool_expression(node, s, outfile)
 	if vartype == "INT":
-		# pass the node where the integer expression starts - exp2 is the start of arithmetic expressions
-		node = node.children[0].children[0].children[0]
 		solve_int_expression(node, s, outfile)
-	if vartype == "STRING":
-		solve_string_expression(node, s, outfile)
 
 def solve_bool_expression(node, s, outfile):
 
@@ -202,22 +195,88 @@ def solve_bool_expression(node, s, outfile):
 #<term2>-> <sign> <fact2> { [*|/|%] <sign> <fact2> }
 #<sign> -> - | lambda
 #<fact2>-> <ident> | INTLIT | BOOLLIT | STRINGLIT | (<expression>)
+#result of solve_int_expression will be solved in $t0
 def solve_int_expression(node, s, outfile):
+	outfile.write("li\t$t0, 0\n")
+	node = node.children[0].children[0].children[0]
 	plus = True  # add the first number
-	expr_sum = 0
 	for child in node.children:
-		if child.label == "FACT":
+		if child.label == "TERM2":
 			if plus:
-				expr_sum += child.val
+				int_expression_helper(child, s, outfile) #result of this will be in $t2
+				outfile.write("add\t$t0, $t0, $t1\n")
 			else:
-				expr_sum -= child.val
+				int_expression_helper(child, s, outfile) #result of this will be in $t2
+				outfile.write("sub\t$t0, $t0, $t1\n")
 		if child.label == "PLUS":
 			plus = True
 		if child.label == "MINUS":
 			plus = False
 
-def solve_string_expression(node, s, outfile):
-	pass
+# the node in this case is <term2> - this solves *, /, %
+# after this function, the value of <term2> is stored in $t1
+def int_expression_helper(node, s, outfile):
+	arithop = 0 # 0 = multiplication, 1 = division, 2 = modulo
+	isNegative = False
+	outfile.write("li\t$t1, 0\n") #$t2 will accumulate the result of the <term2> expression
+
+	for i, child in enumerate(node.children):
+		if child.label == "SIGN":
+			if not child.children[0].label == "LAMBDA":
+				isNegative = True
+
+		#add the first real number to the sum -rest of children need to be mult/divide/modulo
+		if i == 1:
+			solve_fact2(child, isNegative, s, outfile) #result is in $t2
+			outfile.write("add\t$t1, $t1, $t2\n")
+			continue
+
+		if child.label == "TIMES":
+			arithop = 0
+
+		if child.label == "DIVIDE":
+			arithop = 1
+
+		if child.label == "MODULO":
+			arithop = 2
+
+		if child.label == "FACT2":
+			valnode = child.children[0]
+			solve_fact2(valnode, isNegative, s, outfile) #result is in $t2
+			if arithop == 0:
+				outfile.write("mult\t$t1, t2\n")
+				outfile.write("mfhi\t$t1\n")
+			elif arithop == 1:
+				outfile.write("div\t$t1, $t2\n")
+				outfile.write("mfhi\t$t1\n")
+			else: #arithop ==2
+				outfile.write("div\t$t1, $t2\n")
+				outfile.write("mflo\t$t1\n")
+
+#result of fact2 is stored in $t2
+def solve_fact2(node, isNegative, s, outfile):
+	if node.label == "IDENT":
+		outfile.write("lw\t$t2, " + node.val + "\n")
+
+	if node.label == "INTLIT":
+		outfile.write("li\t$t2, " + node.val + "\n")
+
+	if node.label == "EXPRESSION":
+		# write the current sum and number waiting to be added to the stack pointer $sp
+		outfile.write("addi\t$sp, $sp, -4\n")	# -4 because we are going to push 1 word onto the stack
+		outfile.write("sw\t\t$t0, 0($sp)\n")	# store the current sum
+		# make recursive expression call
+		solve_int_expression(node, s, outfile) #sum of the recursive call is in $t0
+		outfile.write("move\t$t2, $t0") #moves the result of the recursive int expression into $t2
+		# restore sum from the stack and increment the stack point
+		outfile.write("lw\t$t0, 0($sp)\n")	#$t0 now holds the sum before the recursive call
+		outfile.write("addi\t$sp, $sp, 4\n")
+		#4 lines up is basically the return of the function. The partial sum of the result is in $t2
+
+	if isNegative:
+		outfile.write("li\t$t6, 0\n") #this is for subtracting our positive number to get a negative version
+		outfile.write("sub\t$t2, $t6, $t2") #$t2 now holds the negative of the old $t2
+	#else $t2 is already correct
 
 class SemanticError(Exception):
 
