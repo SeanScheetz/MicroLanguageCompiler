@@ -1,9 +1,5 @@
 begin
-int x;
-int y;
-int z;
-x := 15;
-y := 10;
-z := 10;
-write(y*-(x), 3*(-z));
+string x;
+x := "testlit";
+write(x);
 end

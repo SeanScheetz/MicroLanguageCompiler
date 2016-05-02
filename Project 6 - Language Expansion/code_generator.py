@@ -33,7 +33,7 @@ def allocate_string(node, s, outfile):
 	newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
 	if newnode.label == "STRINGLIT":
 		outfile.write(node.children[0].val + ":\t.asciiz\t" + newnode.val + "\n")
-		s[node.children[0].val][2] = newnode.val
+		s[node.children[0].val][1] = newnode.val
 	elif node.children[0].label == "IDENT":
 		ident = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
 		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + s[ident][1] + "\n")
@@ -59,6 +59,8 @@ def start_data(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
 	# user instruction
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
+	outfile.write("true:\t.asciiz\t\"True\"\n")
+	outfile.write("false:\t.asciiz\t\"False\"\n")
 
 def start_text(s, outfile):
 	outfile.write("\n")
@@ -97,13 +99,28 @@ def read_ids(node, s, outfile):
 def write_ids(node, s, outfile):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
-		#need to change the syscall based on the type that is being printed
-		outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
-		solve_expression(child, s, outfile)
-		# move the expression result (int to be printed) that is in $t0 into
-		# $a0 (argument 0)
-		outfile.write("move\t$a0, $t0\n")
-		outfile.write("syscall\n")
+		vartype, startnode = get_expression_type(child, s, outfile)
+
+		if vartype == "INT":
+			outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
+			solve_expression(child, s, outfile)
+			# move the expression result (int to be printed) that is in $t0 into
+			# $a0 (argument 0)
+			outfile.write("move\t$a0, $t0\n")
+			outfile.write("syscall\n")
+		elif vartype == "BOOL": #eventually make this print true or false instead of 1 or 0
+			outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
+			solve_expression(child, s, outfile) #$t0 will hold the result - will be 0 or 1
+			outfile.write("move\t$a0, $t0\n")
+			outfile.write("syscall\n")
+		else: #vartype == "STRING"
+			outfile.write("li\t\t$v0, 4\n")  # 4 is the syscall to print a string
+			string_node = child.children[0].children[0].children[0].children[0].children[1].children[0]
+			if string_node.label == "IDENT":
+				outfile.write("la\t$a0, " + string_node.val + "\n")
+				outfile.write("syscall\n")
+			else: #string_node.label == "STRINGLIT"
+				pass #still need code to write string literals
 
 		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
 		outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
@@ -155,14 +172,14 @@ def get_expression_type(node, s, outfile):
 def assign(node, s, outfile):
 	ident = node.children[0].val  # children[0] will always be <ident>
 	if s[ident][1] == 0:
-		raise SemanticError(
-			"Semantic Error: Use of variable " + ident + " without declaration.")
+		raise SemanticError("Semantic Error: Use of variable " + ident + " without declaration.")
 	vartype = s[ident][0]
 
-	outfile.write("# assign value to " + ident + ".\n")
-	# children[1] will always be <expression>
-	solve_expression(node.children[1], s, outfile)
-	outfile.write("sw\t\t$t0, " + ident + "\n\n")
+	if vartype != "STRING":
+		outfile.write("# assign value to " + ident + ".\n")
+		# children[1] will always be <expression>
+		solve_expression(node.children[1], s, outfile)
+		outfile.write("sw\t\t$t0, " + ident + "\n\n")
 
 def solve_expression(node, s, outfile):
 	vartype, startnode = get_expression_type(node, s, outfile)
