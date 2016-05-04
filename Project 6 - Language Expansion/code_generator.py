@@ -189,40 +189,58 @@ def solve_expression(node, s, outfile):
 		solve_int_expression(node, s, outfile)
 
 
+#result of bool expression with be in $t0
 def solve_bool_expression(node, s, outfile):
+	outfile.write("li\t$t0, 0\n")
+	for child in node.children:
+		if child.label == "TERM1":
+			solve_term1(child, s, outfile) #stored in $t1
+			outfile.write("or\t$t0, $t0, $t1\n")
 
-	if node.children[0].label == "TERM1":
-		#if we see an or then logically or them
-		if len(node.children) > 1:
-			return solve_bool_expression(node.children[0],s, outfile) or solve_bool_expression(node.children[2], s, outfile)
-		else:
-			return solve_bool_expression(node.children[0],s, outfile)
-	elif node.children[0].label == "FACT1":
-		if len(node.children) > 1:
-			return solve_bool_expression(node.children[0],s,outfile) and solve_bool_expression(node.children[2],s,outfile)
-		else:
-			return solve_bool_expression(node.children[0], s , outfile)
-	elif node.children[0].label == "NOT":
-		return not solve_bool_expression(node.children[1], s , outfile)
-	elif node.children[0].label == "EXPR2":
-		if node.children[1].children[0].label == "LAMBDA":
-			solve_bool_expression(node.children[0], s, outfile)
-		elif node.children[1].children[0].label == "RELATIONOP":
-			return parseOperator(solve_int_expression(node.children[0], s, outfile), node.children[1].children[0].val, solve_int_expression(node.children[1].children[1], s, outfile))
+def solve_term1(node, s, outfile):
+	outfile.write("li\t$t1, 1\n")
+	for child in node.children:
+		if child.label == "FACT1":
+			solve_fact1(child, s, outfile) #stored in $t2
+			outfile.write("and\t$t1, $t1, $t2\n")
 
-	elif node.label == "FACT2":
-		if node.children[0].label == "IDENT":
-			return s[node.children[0].val][1]
-		elif node.children[0].label == "BOOLLIT":
-			if node.children[0].val =="True":
-				return True
-			elif node.children[0].val =="False":
-				return False
-		elif node.children[0].label == "EXPRESSION":
-			return solve_bool_expression(node.children[0], s, outfile)
-	else:
-		raise SemanticError("Semantic Error: Not valid boolean expression.")
-		#dont think will happen with parser but cant hurt to throw it i suppose.
+def solve_fact1(node, s, outfile):
+	for child in node.children:
+		if child.label == "NOT":
+			outfile.write("li\t$t2, -1\n")
+			solve_fact2_bool(node.children[1], s, outfile)
+			outfile.write("xor\t$t2, $t2, $t3\n")
+
+def solve_fact2_bool(node, s, outfile):
+	if node.children[0].label == "IDENT":
+		outfile.writeln("lw\t$t3, " + node.children[0].val)
+
+	elif node.children[0].label == "BOOLLIT":
+		if node.children[0].val == "True":
+			outfile.write("li\t$t3, 1\n")
+		else: #node.children[0].val == "False"
+			outfile.write("li\t$t3, 0\n")
+
+	else: #node.children[0].label == "EXPRESSION"
+		# write the current sum and number waiting to be added to the stack pointer $sp
+		outfile.write("addi\t$sp, $sp, -4\n")  # -4 because we are going to push 1 word onto the stack
+		outfile.write("sw\t\t$t0, 0($sp)\n")  # stores OR results
+		outfile.write("addi\t$sp, $sp, -4\n")  # -4 because we are going to push 1 word onto the stack
+		outfile.write("sw\t\t$t1, 0($sp)\n")  # stores AND results
+		outfile.write("addi\t$sp, $sp, -4\n")  # -4 because we are going to push 1 word onto the stack
+		outfile.write("sw\t\t$t2, 0($sp)\n")  # stores NOT results
+		# make recursive expression call
+		solve_bool_expression(node.children[0], s, outfile) #stores bool result in $t0
+		outfile.write("move\t$t3, $t0\n")  # moves the result of the recursive bool expression into $t3
+		# restore sum from the stack and increment the stack point
+		outfile.write("lw\t$t2, 0($sp)\n")  # $t2 now holds the NOT results from before the recursive call
+		outfile.write("addi\t$sp, $sp, 4\n")
+		outfile.write("lw\t$t1, 0($sp)\n")  # $t1 now holds the AND results from before the recursive call
+		outfile.write("addi\t$sp, $sp, 4\n")
+		outfile.write("lw\t$t0, 0($sp)\n")  # $t0 now holds the OR before the recursive call
+		outfile.write("addi\t$sp, $sp, 4\n")
+
+	# 4 lines up is basically the return of the function. The partial sum of the result is in $t2
 
 #<exp2> -> <term2> { [+|-] <term2> }
 #<term2>-> <sign> <fact2> { [*|/|%] <sign> <fact2> }
