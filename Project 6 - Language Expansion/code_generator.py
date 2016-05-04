@@ -212,11 +212,29 @@ def solve_fact1(node, s, outfile):
 			outfile.write("li\t$t8, -1\n")
 			solve_fact2_bool(node.children[1], s, outfile)
 			outfile.write("xor\t$t8, $t8, $t9\n")
+		if child.label == "EXP2":
+			solve_int_expression(child, s, outfile) #result of expression is in $t0
+			outfile.write("move\t$t5, $t0\n") #storing in $t5 while waiting for other expression
+			solve_int_expression(node.children[1].children[1]) #stores in $t0
+			relop = node.children[1].children[0].val
+
+			if relop == "==":
+				outfile.write("seq\t$t8, $t5, $t0")
+			elif relop == "!=":
+				outfile.write("sne\t$t8, $t5, $t0")
+			elif relop == ">=":
+				outfile.write("sge\t$t8, $t5, $t0")
+			elif relop == "<=":
+				outfile.write("sle\t$t8, $t5, $t0")
+			elif relop == ">":
+				outfile.write("sgt\t$t8, $t5, $t0\n")
+			elif relop == "<":
+				outfile.write("slt\t$t8, $t5, $t0\n")
 
 # result is stored in $t9
 def solve_fact2_bool(node, s, outfile):
 	if node.children[0].label == "IDENT":
-		outfile.writeln("lw\t$t9, " + node.children[0].val)
+		outfile.write("lw\t$t9, " + node.children[0].val + "\n")
 
 	elif node.children[0].label == "BOOLLIT":
 		if node.children[0].val == "True":
@@ -252,7 +270,8 @@ def solve_fact2_bool(node, s, outfile):
 #result of solve_int_expression will be solved in $t0
 def solve_int_expression(node, s, outfile):
 	outfile.write("li\t$t0, 0\n")
-	node = node.children[0].children[0].children[0]
+	if not node.label == "EXP2": #only does this if the <expression> node is what was passed to this function
+		node = node.children[0].children[0].children[0]
 	plus = True  # add the first number
 	for child in node.children:
 		if child.label == "TERM2":
