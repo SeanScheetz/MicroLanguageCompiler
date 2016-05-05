@@ -1,12 +1,14 @@
 # Generator - returns nodes while progressing through a depth first search
 # of the tree, t
+
+
 def traverse_tree(t):
 	yield t
 	for child in t.children:
 		yield from traverse_tree(child)
 
 # generates the .data section - full traversal of the tree
-def generate_data(node, s, outfile):
+def generate_data(node, s, outfile, stringLitDict):
 	if node.label == "BEGIN":
 		start_data(s, outfile)
 	if node.label == "DECLARATION":
@@ -24,22 +26,21 @@ def generate_data(node, s, outfile):
 		except:
 			raise SemanticError("Semantic Error: Variable used before declaration.")
 		if vartype == "STRING":
-			allocate_string(node, s, outfile)
+			allocate_string_ident(node, s, outfile)
+	if node.label == "WRITE":
+		
 
-def allocate_string(node, s, outfile):
-	typ, startnode = get_expression_type(node.children[1], s, outfile)
-	if typ != "STRING":
-		raise SemanticError("Semantic Error: Expected String, received " + typ)
-	newnode = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0]
-	if newnode.label == "STRINGLIT":
-		outfile.write(node.children[0].val + ":\t.asciiz\t" + newnode.val + "\n")
-		s[node.children[0].val][1] = newnode.val
-	elif node.children[0].label == "IDENT":
-		ident = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
-		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + s[ident][1] + "\n")
+#allocates space in .data for an identifier to a string constant
+def allocate_string_ident(node, s, outfile):
+	vartype, startnode = get_expression_type(node.children[1], s, outfile)
+	if vartype != "STRING":
+		raise SemanticError("Semantic Error: Expected String, received " + vartyp)
+	string_lit = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
+	if node.children[0].label == "IDENT":
+		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + string_lit + "\n")
 
 # generates the .text section - full traversal of the tree
-def generate_text(node, s, outfile):
+def generate_text(node, s, outfile, stringLitDict):
 	if node.label == "BEGIN":
 		start_text(s, outfile)
 	if node.label == "END":
@@ -59,8 +60,6 @@ def start_data(s, outfile):
 	outfile.write("\t.data\n")  # start of the data section
 	# user instruction
 	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
-	outfile.write("true:\t.asciiz\t\"True\"\n")
-	outfile.write("false:\t.asciiz\t\"False\"\n")
 
 def start_text(s, outfile):
 	outfile.write("\n")
@@ -102,6 +101,7 @@ def write_ids(node, s, outfile):
 		vartype, startnode = get_expression_type(child, s, outfile)
 
 		if vartype == "INT":
+			outfile.write("# Writing an integer expression\n")
 			outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
 			solve_expression(child, s, outfile)
 			# move the expression result (int to be printed) that is in $t0 into
@@ -109,18 +109,22 @@ def write_ids(node, s, outfile):
 			outfile.write("move\t$a0, $t0\n")
 			outfile.write("syscall\n")
 		elif vartype == "BOOL": #eventually make this print true or false instead of 1 or 0
+			outfile.write("# Writing a bool expression\n")
 			outfile.write("li\t\t$v0, 1\n")  # 1 is the syscall to print an int
-			solve_expression(child, s, outfile) #$t0 will hold the result - will be 0 or 1
-			outfile.write("move\t$a0, $t0\n")
+			solve_expression(child, s, outfile) #$t6 will hold the result - will be 0 or 1
+			outfile.write("move\t$a0, $t6\n")
 			outfile.write("syscall\n")
 		else: #vartype == "STRING"
+			outfile.write("# Writing a string expression\n")
 			outfile.write("li\t\t$v0, 4\n")  # 4 is the syscall to print a string
 			string_node = child.children[0].children[0].children[0].children[0].children[1].children[0]
 			if string_node.label == "IDENT":
 				outfile.write("la\t$a0, " + string_node.val + "\n")
 				outfile.write("syscall\n")
 			else: #string_node.label == "STRINGLIT"
-				pass #still need code to write string literals
+				num = stringLitDict[string_node.val]
+				outfile.write("la\t$a0, string" + num + "\n")
+				outfile.write("syscall\n")
 
 		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
 		outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
@@ -130,6 +134,7 @@ def write_ids(node, s, outfile):
 
 def get_expression_type(node, s, outfile):
 	startnode = node
+
 	if len(node.children) > 1:
 		# EXPRESSION node
 		return "BOOL", startnode
@@ -179,7 +184,10 @@ def assign(node, s, outfile):
 		outfile.write("# assign value to " + ident + ".\n")
 		# children[1] will always be <expression>
 		solve_expression(node.children[1], s, outfile)
-		outfile.write("sw\t\t$t0, " + ident + "\n\n")
+		if vartype == "INT":
+			outfile.write("sw\t\t$t0, " + ident + "\n\n")
+		else: #vartype == "STRING"
+			outfile.write("sw\t\t$t6, " + ident + "\n\n")
 
 def solve_expression(node, s, outfile):
 	vartype, startnode = get_expression_type(node, s, outfile)
@@ -188,12 +196,12 @@ def solve_expression(node, s, outfile):
 	if vartype == "INT":
 		solve_int_expression(node, s, outfile)
 
-
 #result of bool expression with be in $t6
 def solve_bool_expression(node, s, outfile):
 	outfile.write("li\t$t6, 0\n")
 	for child in node.children:
 		if child.label == "TERM1":
+
 			solve_term1(child, s, outfile) #stored in $t7
 			outfile.write("or\t$t6, $t6, $t7\n")
 
@@ -207,16 +215,23 @@ def solve_term1(node, s, outfile):
 
 #result $t8
 def solve_fact1(node, s, outfile):
-	for child in node.children:
-		if child.label == "NOT":
-			outfile.write("li\t$t8, -1\n")
-			solve_fact2_bool(node.children[1], s, outfile)
-			outfile.write("xor\t$t8, $t8, $t9\n")
-		if child.label == "EXP2":
-			solve_int_expression(child, s, outfile) #result of expression is in $t0
+	if node.children[0].label == "NOT":
+		outfile.write("li\t$t8, -1\n")
+		solve_fact2_bool(node.children[1], s, outfile)
+		outfile.write("xor\t$t8, $t8, $t9\n")
+	if node.children[0].label == "EXP2":
+		if not node.children[1].children[0].label == "LAMBDA":
+			vartype, idk = get_expression_type(node.children[0], s, outfile)
+			#if vartype != "INT":
+				#raise SemanticError("Semantic Error: Type mismatch - used relationops with non ints.")
+			vartype, idk = get_expression_type(node.children[1].children[1], s, outfile)
+			#if vartype != "INT":
+				#raise SemanticError("Semantic Error: Type mismatch - used relationops with non ints.")
+
+			solve_int_expression(node.children[0], s, outfile) #result of expression is in $t0
 			outfile.write("move\t$t5, $t0\n") #storing in $t5 while waiting for other expression
-			solve_int_expression(node.children[1].children[1]) #stores in $t0
-			relop = node.children[1].children[0].val
+			solve_int_expression(node.children[1].children[1], s, outfile) #stores in $t0
+			relop = node.children[1].val
 
 			if relop == "==":
 				outfile.write("seq\t$t8, $t5, $t0")
@@ -230,6 +245,9 @@ def solve_fact1(node, s, outfile):
 				outfile.write("sgt\t$t8, $t5, $t0\n")
 			elif relop == "<":
 				outfile.write("slt\t$t8, $t5, $t0\n")
+		else:
+			solve_fact2_bool(node.children[0].children[0].children[1], s, outfile) #result in $t9
+			outfile.write("move\t$t8, $t9\n")
 
 # result is stored in $t9
 def solve_fact2_bool(node, s, outfile):

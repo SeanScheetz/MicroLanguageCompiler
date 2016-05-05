@@ -1,5 +1,4 @@
 begin
-int x;
-x := 5;
-write(x);
+string x;
+x := "stringlit";
 end

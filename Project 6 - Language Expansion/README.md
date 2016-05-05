@@ -2,9 +2,7 @@ This project adds a code generator and compiler module to the project. In order 
 needed to be modified to store the intliteral and identifier data in the nodes.
 
 ## Current Tasks
-1. Implement printing True and False as literals instead of 1 and 0
 2. Write the code to print a string lit (it is in the write_list function)
-3. Finish writing solve_bool_expression
 4. Potentially refactor part 2 into solve_string_expression
 
 
