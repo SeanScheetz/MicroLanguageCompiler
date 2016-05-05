@@ -1,4 +1,5 @@
 begin
 string x;
-x := "stringlit";
+x := "12";
+write("hi", "mark", "sean");
 end

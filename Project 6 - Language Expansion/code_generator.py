@@ -19,6 +19,9 @@ def generate_data(node, s, outfile, stringLitDict):
 		s[ident][1] = 1
 		if node.children[0].children[0].label == "INT" or node.children[0].children[0].label == "BOOL":
 			allocate_word(node.children[1], s, outfile)
+	if node.label == "STATEMENT":
+		if node.children[0].label == "WRITE":
+			check_for_stringlits(node.children[1], s, outfile, stringLitDict)
 	if node.label == "ASSIGNMENT":
 		ident = node.children[0].children[0].val
 		try:
@@ -27,17 +30,23 @@ def generate_data(node, s, outfile, stringLitDict):
 			raise SemanticError("Semantic Error: Variable used before declaration.")
 		if vartype == "STRING":
 			allocate_string_ident(node, s, outfile)
-	if node.label == "WRITE":
-		
 
 #allocates space in .data for an identifier to a string constant
 def allocate_string_ident(node, s, outfile):
 	vartype, startnode = get_expression_type(node.children[1], s, outfile)
 	if vartype != "STRING":
-		raise SemanticError("Semantic Error: Expected String, received " + vartyp)
+		raise SemanticError("Semantic Error: Expected String, received " + vartype)
 	string_lit = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
 	if node.children[0].label == "IDENT":
 		outfile.write(str(node.children[0].val) + ":\t.asciiz\t" + string_lit + "\n")
+
+def check_for_stringlits(node, s, outfile, stringLitDict):
+	for child in node.children:
+		vartype, idk = get_expression_type(child, s, outfile)
+		if vartype == "STRING":
+			string_val = child.children[0].children[0].children[0].children[0].children[1].children[0].val
+			outfile.write("string" + str(len(stringLitDict)) + ":\t.asciiz\t" + string_val + "\n")
+			stringLitDict[string_val] = "string" + str(len(stringLitDict))
 
 # generates the .text section - full traversal of the tree
 def generate_text(node, s, outfile, stringLitDict):
@@ -53,7 +62,7 @@ def generate_text(node, s, outfile, stringLitDict):
 			read_ids(node.children[1], s, outfile)
 		if node.children[0].label == "WRITE": #depends on solve expression
 			# node.children[1] will always be <expr_list> here
-			write_ids(node.children[1], s, outfile)
+			write_ids(node.children[1], s, outfile, stringLitDict)
 
 
 def start_data(s, outfile):
@@ -95,7 +104,7 @@ def read_ids(node, s, outfile):
 		s[child.val] = 1
 
 
-def write_ids(node, s, outfile):
+def write_ids(node, s, outfile, stringLitDict):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
 		vartype, startnode = get_expression_type(child, s, outfile)
@@ -122,8 +131,8 @@ def write_ids(node, s, outfile):
 				outfile.write("la\t$a0, " + string_node.val + "\n")
 				outfile.write("syscall\n")
 			else: #string_node.label == "STRINGLIT"
-				num = stringLitDict[string_node.val]
-				outfile.write("la\t$a0, string" + num + "\n")
+				label = stringLitDict[string_node.val]
+				outfile.write("la\t$a0, " + label + "\n")
 				outfile.write("syscall\n")
 
 		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
