@@ -33,7 +33,7 @@ def generate_data(node, s, outfile, stringLitDict):
 
 #allocates space in .data for an identifier to a string constant
 def allocate_string_ident(node, s, outfile):
-	vartype, startnode = get_expression_type(node.children[1], s, outfile)
+	vartype = get_expression_type(node.children[1], s, outfile)
 	if vartype != "STRING":
 		raise SemanticError("Semantic Error: Expected String, received " + vartype)
 	string_lit = node.children[1].children[0].children[0].children[0].children[0].children[1].children[0].val
@@ -42,7 +42,7 @@ def allocate_string_ident(node, s, outfile):
 
 def check_for_stringlits(node, s, outfile, stringLitDict):
 	for child in node.children:
-		vartype, idk = get_expression_type(child, s, outfile)
+		vartype = get_expression_type(child, s, outfile)
 		if vartype == "STRING":
 			string_val = child.children[0].children[0].children[0].children[0].children[1].children[0].val
 			outfile.write("string" + str(len(stringLitDict)) + ":\t.asciiz\t" + string_val + "\n")
@@ -107,7 +107,7 @@ def read_ids(node, s, outfile):
 def write_ids(node, s, outfile, stringLitDict):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
-		vartype, startnode = get_expression_type(child, s, outfile)
+		vartype = get_expression_type(child, s, outfile)
 
 		if vartype == "INT":
 			outfile.write("# Writing an integer expression\n")
@@ -142,46 +142,73 @@ def write_ids(node, s, outfile, stringLitDict):
 
 
 def get_expression_type(node, s, outfile):
-	startnode = node
-
-	if len(node.children) > 1:
-		# EXPRESSION node
-		return "BOOL", startnode
-	else:
-		# TERM1 node
-		node = node.children[0]
+	if node.label == "EXPRESSION":
 		if len(node.children) > 1:
-			return "BOOL", startnode
+			for child in node.children:
+				if child.label == "TERM1":
+					if get_expression_type(child, s, outfile) != "BOOL":
+						raise SemanticError("Semantic Error: Non boolean expressions with 'OR's")
+			return "BOOL"
 		else:
-			# FACT1 node
-			node = node.children[0]
-			if node.children[0].label == "NOT":
-				return "BOOL", startnode
-			elif node.children[1].children[0].label == "RELATIONOP":
-				return "BOOL", startnode
-			else:
-				# EXP2 node
-				node = node.children[0]
-				if len(node.children) > 1:
-					return "INT", startnode
-				else:
-					node = node.children[0]
-					if len(node.children) > 2:
-						return "INT", startnode
-					else:
-						node = node.children[1]
-						if node.children[0].label == "IDENT":
-							exprtype = s[node.children[0].val][0]
-						elif node.children[0].label == "INTLIT":
-							exprtype = "INT"
-						elif node.children[0].label == "BOOLLIT":
-							exprtype = "BOOL"
-						elif node.children[0].label == "STRINGLIT":
-							exprtype = "STRING"
-						else:
-							exprtype = get_expression_type(node, s, outfile)
-						return exprtype, startnode
+			return get_expression_type(node.children[0], s, outfile) #node.children[0] is a <term1> node
 
+	if node.label == "TERM1":
+		if len(node.children) > 1:
+			for child in node.children:
+				if child.label == "FACT1":
+					if get_expression_type(child, s, outfile) != "BOOL":
+						raise SemanticError("Semantic Error: Non boolean expressions with 'AND's")
+			return "BOOL"
+		else:
+			return get_expression_type(node.children[0], s, outfile) #node.children[0] is a <fact1> node
+
+	if node.label == "FACT1":
+		if node.children[0].label == "NOT":
+			if get_expression_type(node.children[1], s, outfile) != "BOOL":
+				raise SemanticError("Semantic Error: Tried to not a nonbool expression")
+			return "BOOL"
+		elif node.children[1].children[0].label == "RELATIONOP":
+			if get_expression_type(node.children[1].children[1], s, outfile) != "INT" or get_expression_type(node.children[0], s, outfile) != "INT":
+				raise SemanticError("Semantic Error: Used a non int expression with a relation op")
+			return "BOOL"
+		else:
+			return get_expression_type(node.children[0], s, outfile) #node.children[0] is an <expr2> node
+
+	if node.label == "EXP2":
+		if len(node.children) > 1:
+			for child in node.children:
+				if child.label == "TERM2":
+					if get_expression_type(child, s, outfile) != "INT":
+						raise SemanticError("Semantic Error: Tried to add/sub non int expressions")
+			return "INT"
+		else:
+			return get_expression_type(node.children[0], s, outfile) #node.children[0] is a <term2> node
+
+	if node.label == "TERM2":
+		if len(node.children) > 2:
+			for child in node.children:
+				if child.label == "FACT2":
+					if get_expression_type(child, s, outfile) != "INT":
+						raise SemanticError("Semantic Error: Tried to mult/div/mod non int expressions")
+			return "INT"
+		elif node.children[0].children[0].label == "MINUS":
+			if get_expression_type(node.children[1].children[0], s, outfile) != "INT":
+				raise SemanticError("Semantic Error: Tried to use unary negation with non int expression")
+			return "INT"
+		else:
+			return get_expression_type(node.children[1], s, outfile) #node.chbildren[1] is a <fact2> node
+
+	if node.label == "FACT2":
+			if node.children[0].label == "INTLIT":
+				return "INT"
+			elif node.children[0].label == "BOOLLIT":
+				return "BOOL"
+			elif node.children[0].label == "STRINGLIT":
+				return "STRING"
+			elif node.children[0].label == "IDENT":
+				return s[node.children[0].val][0]
+			else: #node.children[0].label == "EXPRESSION"
+				return get_expression_type(node.children[0], s, outfile)
 
 def assign(node, s, outfile):
 	ident = node.children[0].val  # children[0] will always be <ident>
@@ -199,7 +226,7 @@ def assign(node, s, outfile):
 			outfile.write("sw\t\t$t6, " + ident + "\n\n")
 
 def solve_expression(node, s, outfile):
-	vartype, startnode = get_expression_type(node, s, outfile)
+	vartype = get_expression_type(node, s, outfile)
 	if vartype == "BOOL":
 		solve_bool_expression(node, s, outfile)
 	if vartype == "INT":
@@ -210,7 +237,6 @@ def solve_bool_expression(node, s, outfile):
 	outfile.write("li\t$t6, 0\n")
 	for child in node.children:
 		if child.label == "TERM1":
-
 			solve_term1(child, s, outfile) #stored in $t7
 			outfile.write("or\t$t6, $t6, $t7\n")
 
@@ -226,30 +252,24 @@ def solve_term1(node, s, outfile):
 def solve_fact1(node, s, outfile):
 	if node.children[0].label == "NOT":
 		outfile.write("li\t$t8, -1\n")
-		solve_fact2_bool(node.children[1], s, outfile)
+		solve_fact2_bool(node.children[1], s, outfile) #result in $t9
 		outfile.write("xor\t$t8, $t8, $t9\n")
+		outfile.write("andi\t$t8, $t8, 1\n")
 	if node.children[0].label == "EXP2":
-		if not node.children[1].children[0].label == "LAMBDA":
-			vartype, idk = get_expression_type(node.children[0], s, outfile)
-			#if vartype != "INT":
-				#raise SemanticError("Semantic Error: Type mismatch - used relationops with non ints.")
-			vartype, idk = get_expression_type(node.children[1].children[1], s, outfile)
-			#if vartype != "INT":
-				#raise SemanticError("Semantic Error: Type mismatch - used relationops with non ints.")
-
+		if node.children[1].children[0].label != "LAMBDA":
 			solve_int_expression(node.children[0], s, outfile) #result of expression is in $t0
 			outfile.write("move\t$t5, $t0\n") #storing in $t5 while waiting for other expression
 			solve_int_expression(node.children[1].children[1], s, outfile) #stores in $t0
 			relop = node.children[1].val
 
 			if relop == "==":
-				outfile.write("seq\t$t8, $t5, $t0")
+				outfile.write("seq\t$t8, $t5, $t0\n")
 			elif relop == "!=":
-				outfile.write("sne\t$t8, $t5, $t0")
+				outfile.write("sne\t$t8, $t5, $t0\n")
 			elif relop == ">=":
-				outfile.write("sge\t$t8, $t5, $t0")
+				outfile.write("sge\t$t8, $t5, $t0\n")
 			elif relop == "<=":
-				outfile.write("sle\t$t8, $t5, $t0")
+				outfile.write("sle\t$t8, $t5, $t0\n")
 			elif relop == ">":
 				outfile.write("sgt\t$t8, $t5, $t0\n")
 			elif relop == "<":
@@ -278,8 +298,8 @@ def solve_fact2_bool(node, s, outfile):
 		outfile.write("addi\t$sp, $sp, -4\n")  # -4 because we are going to push 1 word onto the stack
 		outfile.write("sw\t\t$t8, 0($sp)\n")  # stores NOT results
 		# make recursive expression call
-		solve_bool_expression(node.children[0], s, outfile) #stores bool result in $t0
-		outfile.write("move\t$t9, $t0\n")  # moves the result of the recursive bool expression into $t3
+		solve_bool_expression(node.children[0], s, outfile) #stores bool result in $t6
+		outfile.write("move\t$t9, $t6\n")
 		# restore sum from the stack and increment the stack point
 		outfile.write("lw\t$t8, 0($sp)\n")  # $t8 now holds the NOT results from before the recursive call
 		outfile.write("addi\t$sp, $sp, 4\n")
@@ -414,13 +434,3 @@ def parseOperator(expr1, opString, expr2):
 		return expr1 > expr2
 
 
-###############RETIRED FUNCTIONS################
-
-# param: file - file being written to
-# param: symbol_table - symbol table being written to .data section of mips output file
-# Note: we use .word as the data type being an int is 4 bytes and a word
-# is 4 bytes
-def convert_symbol_table(outfile, symbol_table):
-	for identifier in symbol_table:
-		outfile.write(identifier + ":\t.word\t" +
-					  str(symbol_table[identifier][1]) + "\n")
