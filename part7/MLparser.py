@@ -471,15 +471,3 @@ def IDENT(current, G, vartype="notype"):
     return next(G), t, s
 
 
-def WHILE(current, G):
-	t = tree("WHILE")
-	s = {}
-	current, child, s1 = EXPRESSION(current, G) # Child is the EXPRESSION tree
-	t.children.append(child)
-	s.update(s1)
-
-	current, child, s1 = PROGRAM(current, G) # Child is the PROGRAM tree
-	t.children.append(child)
-	s.update(s1)
-	return current, t, s
-
