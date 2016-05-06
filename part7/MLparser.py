@@ -86,10 +86,6 @@ def STATEMENT_LIST(current, G):
         current, child, s1 = STATEMENT(current, G)
         t.children.append(child)
         s.update(s1)
-        if current.name != "SEMICOLON":
-            raise ParserError(
-                "Syntax Error: Statement doesn't end with a semicolon" + getTokenLineInfo(current))
-        current = next(G)
     return current, t, s
 
 
