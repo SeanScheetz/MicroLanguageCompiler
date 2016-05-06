@@ -42,7 +42,7 @@ def parser(source_file, token_file):
 
     G = lexer(source_file, token_file)
     try:
-        t, s = PROGRAM(next(G), G)
+        current, t, s = PROGRAM(next(G), G)
         try:
             next(G)  # at this point the source should have no more tokens - if the iterator has more, then it is actually a ParserError
             raise ParserError("Syntax Error: Tokens exist after END keyword.")
@@ -65,7 +65,7 @@ def PROGRAM(current, G):
         s.update(s1)
         if current.name == "END":
             t.children.append(tree("END"))
-            return t, s
+            return current, t, s
         else:
             raise ParserError(
                 "Syntax Error: Statement list complete, but no END token to signal end of program" + getTokenLineInfo(current))
@@ -154,14 +154,14 @@ def STATEMENT(current, G):
         if not current.name == "THEN":
             raise ParserError("Syntax Error: If must be followed with then")
         current, child, s1 = PROGRAM(next(G), G)
-        return current, t, s
+        return next(G), t, s
     
     elif current.name == "WHILE":
         current, child, s1 = EXPRESSION(next(G), G)
         t.children.append(child)
         s.update(s1)
-        current, child, s1 = PROGRAM(next(G), G)
-        return current, t, s
+        current, child, s1 = PROGRAM(current, G)
+        return next(G), t, s
 
 
     else:
