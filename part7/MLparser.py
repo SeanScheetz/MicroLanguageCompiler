@@ -74,6 +74,7 @@ def PROGRAM(current, G):
         raise ParserError(
             "Syntax Error: Program doesn't begin with BEGIN" + getTokenLineInfo(current))
 
+
 def STATEMENT_LIST(current, G):
     t = tree("STATEMENT_LIST")
     s = {}
