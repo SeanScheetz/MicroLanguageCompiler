@@ -147,7 +147,7 @@ def STATEMENT(current, G):
 
         return next(G), t, s  # current should be a ; at this point
 
-    elif current.name == "IF" :
+    elif current.name == "IF":
         current, child, s1 = EXPRESSION(next(G), G)
         t.children.append(child)
         s.update(s1)
@@ -155,9 +155,20 @@ def STATEMENT(current, G):
             raise ParserError("Syntax Error: If must be followed with then")
         current, child, s1 = PROGRAM(next(G), G)
         return current, t, s
+    
+    elif current.name == "WHILE":
+        current, child, s1 = EXPRESSION(next(G), G)
+        t.children.append(child)
+        s.update(s1)
+        current, child, s1 = PROGRAM(next(G), G)
+        return current, t, s
+
+
     else:
         raise ParserError(
             "Syntax Error: Inappproriate token to start a statement" + getTokenLineInfo(current))
+
+
 
 
 def ASSIGNMENT(current, G):
