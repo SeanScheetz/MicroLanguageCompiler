@@ -81,10 +81,6 @@ def STATEMENT_LIST(current, G):
     current, child, s1 = STATEMENT(current, G)  # Child is the STATEMENT tree
     t.children.append(child)
     s.update(s1)
-    if current.name != "SEMICOLON":
-        raise ParserError(
-            "Syntax Error: Statement doesn't end with a semicolon" + getTokenLineInfo(current))
-    current = next(G)
     while current.name != "END":
         # needs to return a semicolon for a valid statement
         current, child, s1 = STATEMENT(current, G)
