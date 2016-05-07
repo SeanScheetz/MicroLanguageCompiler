@@ -149,22 +149,26 @@ def STATEMENT(current, G):
         return next(G), t, s  # current should be a ; at this point
 
     elif current.name == "IF":
+        t.children.append(tree("IF"))
         current, child, s1 = EXPRESSION(next(G), G)
         t.children.append(child)
         s.update(s1)
         if not current.name == "THEN":
             raise ParserError("Syntax Error: If must be followed with then")
+        t.children.append(tree("THEN"))
         current, child, s1 = PROGRAM(next(G), G)
         t.children.append(child)
         s.update(s1)
         current = next(G)
         if current.name == "ELSE":
+            t.children.append(tree("ELSE"))
             current, child, s1 = PROGRAM(next(G), G)
             t.children.append(child)
             s.update(s1)
         return next(G), t, s
 
     elif current.name == "WHILE":
+        t.children.append(tree("WHILE"))
         current, child, s1 = EXPRESSION(next(G), G)
         t.children.append(child)
         s.update(s1)

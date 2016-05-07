@@ -63,6 +63,9 @@ def generate_text(node, s, outfile, stringLitDict):
 		if node.children[0].label == "WRITE": #depends on solve expression
 			# node.children[1] will always be <expr_list> here
 			write_ids(node.children[1], s, outfile, stringLitDict)
+		if node.children[0].label == "IF":
+
+		if node.children[0].label == "WHILE":
 
 
 def start_data(s, outfile):
