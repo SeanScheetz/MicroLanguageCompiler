@@ -154,13 +154,22 @@ def STATEMENT(current, G):
         if not current.name == "THEN":
             raise ParserError("Syntax Error: If must be followed with then")
         current, child, s1 = PROGRAM(next(G), G)
-        return next(G), t, s
-    
+        t.children.append(child)
+        s.update(s1)
+        current = next(G)
+        if current.name == "ELSE":
+            current, child, s1 = PROGRAM(current, G)
+            t.children.append(child)
+            s.update(s1)
+        return current, t, s
+
     elif current.name == "WHILE":
         current, child, s1 = EXPRESSION(next(G), G)
         t.children.append(child)
         s.update(s1)
         current, child, s1 = PROGRAM(current, G)
+        t.children.append(child)
+        s.update(s1)
         return next(G), t, s
 
 

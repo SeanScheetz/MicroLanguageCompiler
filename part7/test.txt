@@ -1,7 +1,12 @@
 begin
-int x;
-x := 1;
-int y;
-y := 5;
-write(not (not (True and False or ("test"))));
+   bool x;
+   x := True;
+   if x then
+   begin
+      write("Yes\n");
+   end
+   else
+   begin
+      write("No\n");
+   end
 end

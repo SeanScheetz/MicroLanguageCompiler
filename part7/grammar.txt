@@ -1,6 +1,6 @@
 <program>	->	#start begin <statement list> end #finish
 <statement list> -> <statement> { <statement> }
-<statement>	->	(<assignment> | read( <id list> ) #read_ids | write( <expr list> ) #write_ids | <decl>); | ( if <expression> then <program>| while <expression> <program>)
+<statement>	->	<assignment>; | read( <id list> ) #read_ids; | write( <expr list> ); #write_ids | <decl>; | if <expression> then <program> [else <program>] | while <expression> <program>
 <assignment>-> <ident> := <expression> #assign
 <decl>      -> <type> <ident>
 <type>      ->  string | int | bool
