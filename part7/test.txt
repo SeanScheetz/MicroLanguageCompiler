@@ -1,12 +1,11 @@
 begin
-   bool x;
-   x := True;
-   if x then
+int i;
+int n;
+i := 0;
+n := 3;
+   while i
    begin
-      write("Yes\n");
-   end
-   else
-   begin
-      write("No\n");
+           write(i);
+        i := i + 1;
    end
 end

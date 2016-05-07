@@ -7,14 +7,21 @@ def compiler(source, tokens, output):
 	t, s = MLparser.parser(source, tokens)
 	print(t)
 	outfile = open(output, "w")
+
 	stringLitList = {}
+	programCountDict = {"count": 0} #used to keep track of subprograms
+
 	G = code_generator.traverse_tree(t)
+	outfile.write("\t.data\n")  # start of the data section
+	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
 	for node in G:
 		code_generator.generate_data(node, s, outfile, stringLitList)
 
 	G = code_generator.traverse_tree(t)
+	outfile.write("\n")
+	outfile.write("\t.text\n")  # start of the data section
 	for node in G:
-		code_generator.generate_text(node, s, outfile, stringLitList)
+		code_generator.generate_text(node, s, outfile, stringLitList, programCountDict)
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":

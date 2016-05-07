@@ -9,8 +9,6 @@ def traverse_tree(t):
 
 # generates the .data section - full traversal of the tree
 def generate_data(node, s, outfile, stringLitDict):
-	if node.label == "BEGIN":
-		start_data(s, outfile)
 	if node.label == "DECLARATION":
 		# Mark the variable as declared
 		ident = node.children[1].children[0].val
@@ -49,11 +47,9 @@ def check_for_stringlits(node, s, outfile, stringLitDict):
 			stringLitDict[string_val] = "string" + str(len(stringLitDict))
 
 # generates the .text section - full traversal of the tree
-def generate_text(node, s, outfile, stringLitDict):
-	if node.label == "BEGIN":
-		start_text(s, outfile)
+def generate_text(node, s, outfile, stringLitDict, programCountDict):
 	if node.label == "END":
-		finish(outfile)
+		finish(outfile, programCountDict)
 	if node.label == "STATEMENT":
 		if node.children[0].label == "ASSIGNMENT": #depends on solve expression
 			assign(node.children[0], s, outfile)
@@ -63,19 +59,12 @@ def generate_text(node, s, outfile, stringLitDict):
 		if node.children[0].label == "WRITE": #depends on solve expression
 			# node.children[1] will always be <expr_list> here
 			write_ids(node.children[1], s, outfile, stringLitDict)
-		if node.children[0].label == "IF":
-
+		#if node.children[0].label == "IF":
 		if node.children[0].label == "WHILE":
-
-
-def start_data(s, outfile):
-	outfile.write("\t.data\n")  # start of the data section
-	# user instruction
-	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
-
-def start_text(s, outfile):
-	outfile.write("\n")
-	outfile.write("\t.text\n")  # start of the data section
+			if get_expression_type(node.children[1], s, outfile) == "BOOL":
+				start_while(node, s, outfile, programCountDict)
+			else:
+				raise SemanticError("Semantic Error: Non bool expression for while loop condition.")
 
 def declaration(node, s, outfile):
 	vartype = node.children[0].label.lower()
@@ -83,8 +72,20 @@ def declaration(node, s, outfile):
 	s[ident][0] = vartype
 	s[ident][1] = 1
 
-def finish(outfile):
-	outfile.close()
+def finish(outfile, programCountDict):
+	if programCountDict["count"] == 0:
+		outfile.close()
+	else:
+		outfile.write("j\tlabel" + str(programCountDict["count"]) + "\n")
+		outfile.write("out" + str(programCountDict["count"]) + ":\n")
+		programCountDict["count"] -= 1
+
+def start_while(node, s, outfile, programCountDict): #node is the statement node containing the expression and the sub program
+	programCountDict["count"] += 1
+	outfile.write("label" + str(programCountDict["count"]) + ":\n")
+	solve_bool_expression(node.children[1], s, outfile) #puts result in $t6
+	outfile.write("li\t$t0, 1\n") #for comparing with result in $t6
+	outfile.write("bne\t$t0, $t6, out" + str(programCountDict["count"]) + "\n") #if $t6 did not return true (1)
 
 def allocate_word(node, s, outfile):
 	ident = node.children[0].val
@@ -141,8 +142,6 @@ def write_ids(node, s, outfile, stringLitDict):
 		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
 		outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
 		outfile.write("syscall\n")
-
-
 
 def get_expression_type(node, s, outfile):
 	if node.label == "EXPRESSION":
