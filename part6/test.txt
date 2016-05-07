@@ -1,7 +1,5 @@
 begin
 int x;
-x := 1;
-int y;
-y := 5;
-write(not (not (True and False or ("test"))));
+x := 12;
+write(x);
 end
