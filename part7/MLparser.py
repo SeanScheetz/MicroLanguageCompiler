@@ -158,10 +158,10 @@ def STATEMENT(current, G):
         s.update(s1)
         current = next(G)
         if current.name == "ELSE":
-            current, child, s1 = PROGRAM(current, G)
+            current, child, s1 = PROGRAM(next(G), G)
             t.children.append(child)
             s.update(s1)
-        return current, t, s
+        return next(G), t, s
 
     elif current.name == "WHILE":
         current, child, s1 = EXPRESSION(next(G), G)
