@@ -14,7 +14,6 @@ def generate_data(node, s, outfile, stringLitDict):
 		ident = node.children[1].children[0].val
 		if s[ident][1] != 0:
 			raise SemanticError("Semantic Error: " + ident + " was declared twice.")
-		s[ident][1] = 1
 		if node.children[0].children[0].label == "INT" or node.children[0].children[0].label == "BOOL":
 			allocate_word(node.children[1], s, outfile)
 	if node.label == "STATEMENT":
@@ -22,10 +21,7 @@ def generate_data(node, s, outfile, stringLitDict):
 			check_for_stringlits(node.children[1], s, outfile, stringLitDict)
 	if node.label == "ASSIGNMENT":
 		ident = node.children[0].children[0].val
-		try:
-			vartype = s[ident][0]
-		except:
-			raise SemanticError("Semantic Error: Variable used before declaration.")
+		vartype = s[ident][0]
 		if vartype == "STRING":
 			allocate_string_ident(node, s, outfile)
 
@@ -56,8 +52,13 @@ def generate_text(node, s, outfile, stringLitDict, programCountDict, ifWhileStac
 		elif ifWhileStack[-1] == 1:
 			finish_if(outfile, programCountDict, ifWhileStack)
 		elif ifWhileStack[-1] == 2:
-			finish_if_else(outfile, programCountDict, ifWhileStack)
+			finish_if_else_if(outfile, programCountDict, ifWhileStack)
+		elif ifWhileStack[-1] == 3:
+			finish_if_else_else(outfile, programCountDict, ifWhileStack)
 	if node.label == "STATEMENT":
+		if node.children[0].label == "DECLARATION":
+			ident = node.children[0].children[1].val
+			s[ident][1] = 1
 		if node.children[0].label == "ASSIGNMENT": #depends on solve expression
 			assign(node.children[0], s, outfile)
 		if node.children[0].label == "READ":
@@ -69,7 +70,8 @@ def generate_text(node, s, outfile, stringLitDict, programCountDict, ifWhileStac
 		if node.children[0].label == "IF":
 			if get_expression_type(node.children[1], s, outfile) == "BOOL":
 				if len(node.children) > 4:
-					ifWhileStack.append(2) #2 is for ifelse statements
+					ifWhileStack.append(3) #3 is for else part statements
+					ifWhileStack.append(2) #2 is for if statement - need 2 numbers because you need to call a finish function for the if part and a different finish function for the else part
 					start_if_else(node, s, outfile, programCountDict)
 				else:
 					ifWhileStack.append(1) #1 is for if statement
@@ -82,9 +84,11 @@ def generate_text(node, s, outfile, stringLitDict, programCountDict, ifWhileStac
 				start_while(node, s, outfile, programCountDict)
 			else:
 				raise SemanticError("Semantic Error: Non-bool expression for while loop condition.")
+	if node.label == "ELSE":
+		do_else(node, s, outfile, programCountDict)
 
 def declaration(node, s, outfile):
-	vartype = node.children[0].label.lower()
+	vartype = node.children[0].label
 	ident = node.children[1].val
 	s[ident][0] = vartype
 	s[ident][1] = 1
@@ -108,7 +112,12 @@ def finish_if(outfile, programCountDict, ifWhileStack):
 		programCountDict["count"] = programCountDict["total"]
 		programCountDict["check"] = programCountDict["total"]
 
-def finish_if_else(outfile, programCountDict, ifWhileStack):
+def finish_if_else_if(outfile, programCountDict, ifWhileStack):
+	ifWhileStack.pop()
+	outfile.write("\n")
+	outfile.write("j\tout" + str(programCountDict["count"]) + "\n")
+
+def finish_if_else_else(outfile, programCountDict, ifWhileStack):
 	ifWhileStack.pop()
 	outfile.write("\n")
 	outfile.write("out" + str(programCountDict["count"]) + ":\n")
@@ -131,8 +140,10 @@ def start_if_else(node, s, outfile, programCountDict):
 	outfile.write("# starting if else statement\n")
 	solve_bool_expression(node.children[1], s, outfile)  # puts result in $t6
 	outfile.write("li\t$t0, 1\n")  # for comparing with result in $t6
-	outfile.write("bne\t$t0, $t6, out" + str(programCountDict["count"]) + "\n")  # if $t6 did not return true (1)
-	outfile.write("j\tout" + str(programCountDict["count"]) + "\n")
+	outfile.write("bne\t$t0, $t6, else" + str(programCountDict["count"]) + "\n")  # if $t6 did not return true (1)
+
+def do_else(node, s, outfile, programCountDict):
+	outfile.write("else" + str(programCountDict["count"]) + ":\n")
 
 def start_while(node, s, outfile, programCountDict): #node is the statement node containing the expression and the sub program
 	outfile.write("#Starting while loop\n")
@@ -150,6 +161,14 @@ def allocate_word(node, s, outfile):
 def read_ids(node, s, outfile):
 	outfile.write("# Reading values for an <id_list>.\n")
 	for child in node.children:
+		try:
+			s[child.val][1] == 0
+		except:
+			raise SemanticError("Semantic Error: Variable used before declaration")
+		if s[child.val][1] == 0:
+			raise SemanticError("Semantic Error: Tried to read value into variable without declaring the variable.")
+		if s[child.val][0] != "INT":
+			raise SemanticError("Semantic Error: Tried to read in value for a non int variable.")
 		# prompt user for int
 		outfile.write("li\t\t$v0, 4\n")  # 4 is the syscall to print a str
 		# loads starting address of prompt string into $a0 (arg 0)
@@ -161,7 +180,7 @@ def read_ids(node, s, outfile):
 		outfile.write("syscall\n")  # after syscall, $v0 holds the int read in
 		# store val in $v0 in the memory allocated to the variable
 		outfile.write("sw\t\t$v0, " + child.val + "\n\n")
-		s[child.val] = 1
+		s[child.val][2] = 1
 
 
 def write_ids(node, s, outfile, stringLitDict):
@@ -473,7 +492,7 @@ class SemanticError(Exception):
 
 
 def check_if_var_init(ident, s):
-	if not s[ident][1] == 1:
+	if not s[ident][2] == 1:
 		raise SemanticError("Semantic Error: Attempted to use variable " +
 							ident + " without prior initialization.")
 

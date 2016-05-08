@@ -1,26 +1,4 @@
 begin
-int i;
-int n;
-int z;
-i := 0;
-n := 3;
-z := 5;
-while i < n
-    begin
-    if True then
-        begin
-            if True then
-            begin
-                write("first test");
-            end
-        end
-        write(i);
-        i := i + 1;
-    end
-
-while i < z
-    begin
-        write(i);
-        i := i + 1;
-    end
+   int n;
+   write(n);
 end

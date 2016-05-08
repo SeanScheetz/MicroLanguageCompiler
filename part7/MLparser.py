@@ -484,7 +484,7 @@ def IDENT(current, G, vartype="notype"):
     t = tree("IDENT")
     s = {}
     if not vartype == "notype":
-        s = {current.pattern: [vartype, 0]}
+        s = {current.pattern: [vartype, 0, 0]} #vartype, decl flag, init flag
     if not current.name == "ID":
         raise ParserError("Syntax Error: Invalid identifier" +
                           getTokenLineInfo(current))
