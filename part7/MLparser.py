@@ -165,7 +165,8 @@ def STATEMENT(current, G):
             current, child, s1 = PROGRAM(next(G), G)
             t.children.append(child)
             s.update(s1)
-        return next(G), t, s
+            return next(G), t, s
+        return current, t, s
 
     elif current.name == "WHILE":
         t.children.append(tree("WHILE"))

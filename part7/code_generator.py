@@ -47,9 +47,17 @@ def check_for_stringlits(node, s, outfile, stringLitDict):
 			stringLitDict[string_val] = "string" + str(len(stringLitDict))
 
 # generates the .text section - full traversal of the tree
-def generate_text(node, s, outfile, stringLitDict, programCountDict):
+def generate_text(node, s, outfile, stringLitDict, programCountDict, ifWhileStack):
 	if node.label == "END":
-		finish(outfile, programCountDict)
+		if programCountDict["count"] == 0:
+			outfile.close()
+		else:
+			if ifWhileStack[-1] == 0:
+				finish_while(outfile, programCountDict, ifWhileStack)
+			elif ifWhileStack[-1] == 1:
+				finish_if(outfile, programCountDict, ifWhileStack)
+			elif ifWhileStack[-1] == 2:
+				finish_if_else(outfile, programCountDict, ifWhileStack)
 	if node.label == "STATEMENT":
 		if node.children[0].label == "ASSIGNMENT": #depends on solve expression
 			assign(node.children[0], s, outfile)
@@ -59,12 +67,22 @@ def generate_text(node, s, outfile, stringLitDict, programCountDict):
 		if node.children[0].label == "WRITE": #depends on solve expression
 			# node.children[1] will always be <expr_list> here
 			write_ids(node.children[1], s, outfile, stringLitDict)
-		#if node.children[0].label == "IF":
+		if node.children[0].label == "IF":
+			if get_expression_type(node.children[1], s, outfile) == "BOOL":
+				if len(node.children) > 4:
+					ifWhileStack.append(2) #2 is for ifelse statements
+					start_if_else(node, s, outfile, programCountDict)
+				else:
+					ifWhileStack.append(1) #1 is for if statement
+					start_if(node, s, outfile, programCountDict)
+			else:
+				raise SemanticError("Semantic Error: Non-bool expression for if condition.")
 		if node.children[0].label == "WHILE":
 			if get_expression_type(node.children[1], s, outfile) == "BOOL":
+				ifWhileStack.append(0) #0 is for while statement
 				start_while(node, s, outfile, programCountDict)
 			else:
-				raise SemanticError("Semantic Error: Non bool expression for while loop condition.")
+				raise SemanticError("Semantic Error: Non-bool expression for while loop condition.")
 
 def declaration(node, s, outfile):
 	vartype = node.children[0].label.lower()
@@ -72,15 +90,35 @@ def declaration(node, s, outfile):
 	s[ident][0] = vartype
 	s[ident][1] = 1
 
-def finish(outfile, programCountDict):
-	if programCountDict["count"] == 0:
-		outfile.close()
-	else:
-		outfile.write("j\tlabel" + str(programCountDict["count"]) + "\n")
-		outfile.write("out" + str(programCountDict["count"]) + ":\n")
-		programCountDict["count"] -= 1
+def finish_while(outfile, programCountDict, ifWhileStack):
+	ifWhileStack.pop()
+	outfile.write("\n")
+	outfile.write("j\tlabel" + str(programCountDict["count"]) + "\n")
+	outfile.write("out" + str(programCountDict["count"]) + ":\n")
+	programCountDict["count"] -= 1
+
+def finish_if(outfile, programCountDict, ifWhileStack):
+	ifWhileStack.pop()
+	outfile.write("\n")
+	outfile.write("out" + str(programCountDict["count"]) + ":\n")
+	programCountDict["count"] -= 1
+
+def finish_if_else(outfile, programCountDict, ifWhileStack):
+	ifWhileStack.pop()
+	pass
+
+def start_if(node, s, outfile, programCountDict):
+	programCountDict["count"] += 1
+	outfile.write("# starting if statement\n")
+	solve_bool_expression(node.children[1], s, outfile) #puts result in $t6
+	outfile.write("li\t$t0, 1\n")  # for comparing with result in $t6
+	outfile.write("bne\t$t0, $t6, out" + str(programCountDict["count"]) + "\n")  # if $t6 did not return true (1)
+
+def start_if_else(node, s, outfile, programCountDict):
+	pass
 
 def start_while(node, s, outfile, programCountDict): #node is the statement node containing the expression and the sub program
+	outfile.write("#Starting while loop\n")
 	programCountDict["count"] += 1
 	outfile.write("label" + str(programCountDict["count"]) + ":\n")
 	solve_bool_expression(node.children[1], s, outfile) #puts result in $t6

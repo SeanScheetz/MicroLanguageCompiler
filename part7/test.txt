@@ -1,11 +1,17 @@
 begin
 int i;
 int n;
+int z;
 i := 0;
 n := 3;
-   while i
-   begin
-           write(i);
-        i := i + 1;
+z := 5;
+    while i < z
+    begin
+        if i < n then
+        begin
+            write(i);
+        end
+        i := i+1;
+        write(z);
    end
 end

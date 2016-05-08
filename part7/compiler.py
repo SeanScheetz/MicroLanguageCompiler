@@ -10,6 +10,7 @@ def compiler(source, tokens, output):
 
 	stringLitList = {}
 	programCountDict = {"count": 0} #used to keep track of subprograms
+	ifWhileStack = []
 
 	G = code_generator.traverse_tree(t)
 	outfile.write("\t.data\n")  # start of the data section
@@ -21,7 +22,7 @@ def compiler(source, tokens, output):
 	outfile.write("\n")
 	outfile.write("\t.text\n")  # start of the data section
 	for node in G:
-		code_generator.generate_text(node, s, outfile, stringLitList, programCountDict)
+		code_generator.generate_text(node, s, outfile, stringLitList, programCountDict, ifWhileStack)
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":
