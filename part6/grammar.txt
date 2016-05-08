@@ -1,6 +1,6 @@
 <program>	->	#start begin <statement list> end #finish
-<statement list> -> <statement>; { <statement>; }
-<statement>	->	<assignment> | read( <id list> ) #read_ids | write( <expr list> ) #write_ids | <decl> | if <statement> then <program>| while <statement> <program>
+<statement list> -> <statement> { <statement> }
+<statement>	->	<assignment>; | read( <id list> ) #read_ids; | write( <expr list> ); #write_ids | <decl>; | if <expression> then <program> [else <program>] | while <expression> <program>
 <assignment>-> <ident> := <expression> #assign
 <decl>      -> <type> <ident>
 <type>      ->  string | int | bool
@@ -20,3 +20,4 @@
 NOTE: the "-" symbol is used in both <sign> and <arith op>. They will both be characterized as the same symbol, but
 I think this is okay because we can just do different things based on the function we are in.
 NOTE: must choose either + or - in exp2 (meaning of [])
+

@@ -7,14 +7,29 @@ def compiler(source, tokens, output):
 	t, s = MLparser.parser(source, tokens)
 	print(t)
 	outfile = open(output, "w")
+
 	stringLitList = {}
-	G = code_generator.traverse_tree(t)
-	for node in G:
-		code_generator.generate_data(node, s, outfile, stringLitList)
+	programCountDict = {"count": 0, "total": 0, "check": 0} #when check equals cur that means the nesting is overwith
+	ifWhileStack = [-1]
 
 	G = code_generator.traverse_tree(t)
+	outfile.write("\t.data\n")  # start of the data section
+	outfile.write("prompt_int:\t.asciiz\t\"Enter an int to store in a variable: \"\n")
 	for node in G:
-		code_generator.generate_text(node, s, outfile, stringLitList)
+		try:
+			code_generator.generate_data(node, s, outfile, stringLitList)
+		except KeyError:
+			raise Exception("Semantic Error: Tried to use variable without declaration.")
+
+
+	G = code_generator.traverse_tree(t)
+	outfile.write("\n")
+	outfile.write("\t.text\n")  # start of the data section
+	for node in G:
+		try:
+			code_generator.generate_text(node, s, outfile, stringLitList, programCountDict, ifWhileStack)
+		except KeyError:
+			raise Exception("Semantic Error: Tried to use variable without declaration.")
 
 # Only true if compiler.py invoked from the command line
 if __name__ == "__main__":
