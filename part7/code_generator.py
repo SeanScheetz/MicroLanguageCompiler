@@ -186,6 +186,9 @@ def read_ids(node, s, outfile):
 def write_ids(node, s, outfile, stringLitDict):
 	outfile.write("# Writing values of an <expr_list>.\n")
 	for child in node.children:
+		if child.children[0].children[0].children[0].label != "not":
+			if child.children[0].children[0].children[0].children[0].children[1].children[0].label == "IDENT":
+				check_if_var_init(child.children[0].children[0].children[0].children[0].children[1].children[0].val, s)
 		vartype = get_expression_type(child, s, outfile)
 
 		if vartype == "INT":
