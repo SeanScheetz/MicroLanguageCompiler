@@ -9,8 +9,8 @@ def compiler(source, tokens, output):
 	outfile = open(output, "w")
 
 	stringLitList = {}
-	programCountDict = {"count": 0} #used to keep track of subprograms
-	ifWhileStack = []
+	programCountDict = {"count": 0, "total": 0, "check": 0} #when check equals cur that means the nesting is overwith
+	ifWhileStack = [-1]
 
 	G = code_generator.traverse_tree(t)
 	outfile.write("\t.data\n")  # start of the data section

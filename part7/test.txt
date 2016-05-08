@@ -5,13 +5,22 @@ int z;
 i := 0;
 n := 3;
 z := 5;
-    while i < z
+while i < n
     begin
-        if i < n then
+    if True then
         begin
-            write(i);
+            if True then
+            begin
+                write("first test");
+            end
         end
-        i := i+1;
-        write(z);
-   end
+        write(i);
+        i := i + 1;
+    end
+
+while i < z
+    begin
+        write(i);
+        i := i + 1;
+    end
 end
