@@ -1,4 +1,4 @@
 begin
-   int n;
-   write(n);
+    int y;
+    y := x + 2;
 end

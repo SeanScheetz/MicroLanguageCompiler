@@ -188,6 +188,7 @@ def write_ids(node, s, outfile, stringLitDict):
 	for child in node.children:
 		if child.children[0].children[0].children[0].label != "not":
 			if child.children[0].children[0].children[0].children[0].children[1].children[0].label == "IDENT":
+				test = child.children[0].children[0].children[0].children[0].children[1].children[0].val
 				check_if_var_init(child.children[0].children[0].children[0].children[0].children[1].children[0].val, s)
 		vartype = get_expression_type(child, s, outfile)
 
@@ -294,6 +295,7 @@ def assign(node, s, outfile):
 	ident = node.children[0].val  # children[0] will always be <ident>
 	if s[ident][1] == 0:
 		raise SemanticError("Semantic Error: Use of variable " + ident + " without declaration.")
+	s[ident][2] = 1
 	vartype = s[ident][0]
 
 	if vartype != "STRING":
@@ -361,6 +363,7 @@ def solve_fact1(node, s, outfile):
 # result is stored in $t9
 def solve_fact2_bool(node, s, outfile):
 	if node.children[0].label == "IDENT":
+		check_if_var_init(node.children[0].val, s)
 		outfile.write("lw\t$t9, " + node.children[0].val + "\n")
 
 	elif node.children[0].label == "BOOLLIT":
@@ -456,6 +459,7 @@ def int_expression_helper(node, s, outfile):
 #result of fact2 is stored in $t2
 def solve_fact2(node, isNegative, s, outfile):
 	if node.label == "IDENT":
+		check_if_var_init(node.val, s)
 		outfile.write("lw\t$t2, " + node.val + "\n")
 
 	if node.label == "INTLIT":
