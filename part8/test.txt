@@ -1,0 +1,14 @@
+begin
+def int a(int x, int y):
+    string v;
+    v := "testing 123";
+    return v;
+
+def int b(string c, bool a):
+    return a;
+
+enddefine
+
+    int x;
+
+end

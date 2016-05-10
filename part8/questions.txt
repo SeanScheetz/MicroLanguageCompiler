@@ -1,0 +1,4 @@
+How do you make an mandatory pick one from a set in regex.
+e.g.
+    <exp2> -> <term2> { [+|-] <term2> }
+    Here we want them to pick either a + or a - but it isn't optional
