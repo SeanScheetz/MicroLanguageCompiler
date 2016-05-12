@@ -218,9 +218,9 @@ def write_ids(node, s, outfile, stringLitDict):
 				outfile.write("la\t$a0, " + label + "\n")
 				outfile.write("syscall\n")
 
-		outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
-		outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
-		outfile.write("syscall\n")
+		#outfile.write("addi\t$a0, $zero, 0xA\n") #ascii code for LF, if you have any trouble try 0xD for CR.
+		#outfile.write("addi\t$v0, $zero, 0xB\n") #syscall 11 prints the lower 8 bits of $a0 as an ascii character.
+		#outfile.write("syscall\n")
 
 def get_expression_type(node, s, outfile):
 	if node.label == "EXPRESSION":
