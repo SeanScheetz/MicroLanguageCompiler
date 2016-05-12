@@ -1,9 +1,12 @@
-<program>	->	#start begin <function list> enddefine <statement list> end #finish
+<program>	->	#start <function list> begin <statement list> end #finish
 <function list> -> <function decl> { <function decl> } | lambda
 <function decl> -> def <type> <ident> ( <param list> ): <statement list>
-<param list> -> <type> <ident> {, <type> <ident> }
+<param list> -> <type> <ident> {, <type> <ident> } | lambda
 <statement list> -> <statement> { <statement> }
-<statement>	-> <assignment>; | read( <id list> ) #read_ids; | write( <expr list> ); #write_ids | <decl>; | if <expression> then <program> [else <program>] | while <expression> <program> | <return stmt>;
+<statement>	-> <assignment>; | read( <id list> ) #read_ids; | write( <expr list> ); #write_ids | <decl>;
+                | if <expression> then <program> [else <program>] | while <expression> <program> | <return stmt>;
+                | func <ident> ( <arg list> );
+<arg list> ->  <expr list> | lambda
 <return stmt> -> return <fact2> #check that fact2 matches function return type unless void
 <assignment>-> <ident> := <expression> #assign
 <decl>      -> <type> <ident>

@@ -58,13 +58,13 @@ def PROGRAM(current, G):
     t = tree("PROGRAM")
     s = {}
 
-    if current.name == "BEGIN":
-        t.children.append(tree("BEGIN"))
-        current, child, s1 = FUNCTION_LIST(next(G), G)
+    if current.name == "DEF":
+        current, child, s1 = FUNCTION_LIST(current, G)
         t.children.append(child)
         s.update(s1)
-        if current.name != "ENDDEFINE":
-            raise ParserError("Syntax Error: Must use 'enddefine' keyword to signal end of function declarartions" + getTokenLineInfo(current))
+        if current.name != "BEGIN":
+            raise ParserError("Syntax error: BEGIN keyword doesn't follow function declarations." + getTokenLineInfo(current))
+        t.children.append(tree("BEGIN"))
         current = next(G)
         current, child, s1 = STATEMENT_LIST(current, G)
         t.children.append(child)
@@ -74,20 +74,30 @@ def PROGRAM(current, G):
             s.update(s1)
             return current, t, s
         else:
-            raise ParserError(
-                "Syntax Error: Statement list complete, but no END token to signal end of program" + getTokenLineInfo(current))
+            raise ParserError("Syntax Error: Statement list complete, but no END token to signal end of program" + getTokenLineInfo(current))
+
+    elif current.name == "BEGIN":
+        t.children.append(tree("FUNCTION LIST"))
+        t.children[0].children.append(tree("LABMDA"))
+        t.children.append(tree("BEGIN"))
+        current = next(G)
+        current, child, s1 = STATEMENT_LIST(current, G)
+        t.children.append(child)
+        s.update(s1)
+        if current.name == "END":
+            t.children.append(tree("END"))
+            s.update(s1)
+            return current, t, s
+        else:
+            raise ParserError("Syntax Error: Statement list complete, but no END token to signal end of program" + getTokenLineInfo(current))
 
     else:
         raise ParserError(
-            "Syntax Error: Program doesn't begin with BEGIN" + getTokenLineInfo(current))
+            "Syntax Error: Program doesn't begin with BEGIN or function declaration" + getTokenLineInfo(current))
 
 def FUNCTION_LIST(current, G):
     t = tree("FUNCTION LIST")
     s = {}
-
-    if current.name != "DEF":
-        t.children.append(tree("LAMBDA"))
-        return current, t, s
 
     while current.name == "DEF":
         current, child, s1 = FUNCTION_DECLARATION(current, G)
@@ -161,7 +171,7 @@ def STATEMENT_LIST(current, G):
     current, child, s1 = STATEMENT(current, G)  # Child is the STATEMENT tree
     t.children.append(child)
     s.update(s1)
-    while current.name != "END" and current.name != "DEF" and current.name != "ENDDEFINE":
+    while current.name != "END" and current.name != "DEF" and current.name != "BEGIN":
         # needs to return a semicolon for a valid statement
         current, child, s1 = STATEMENT(current, G)
         t.children.append(child)
@@ -227,6 +237,25 @@ def STATEMENT(current, G):
 
         return next(G), t, s  # current should be a ; at this point
 
+    elif current.name == "FUNC":
+        t.children.append(tree("FUNC"))
+        current = next(G)
+        current, child, s1 = IDENT(current, G)
+        t.children.append(child)
+        s.update(s1)
+        if current.name != "LPAREN":
+            raise ParserError("Syntax Error: Function call missing opening param to arg list" + getTokenLineInfo(current))
+        current = next(G)
+        current, child, s1 = ARGLIST(current, G)
+        t.children.append(child)
+        s.update(s1)
+        if current.name != "RPAREN":
+            raise ParserError("Syntax Error: Function call missing opening param to arg list" + getTokenLineInfo(current))
+        current = next(G)
+        if current.name != "SEMICOLON":
+            raise ParserError("Syntax Error: Function call doesn't end with a semicolon " + getTokenLineInfo(current))
+        return next(G), t, s
+
     elif current.name == "IF":
         t.children.append(tree("IF"))
         current, child, s1 = EXPRESSION(next(G), G)
@@ -257,7 +286,7 @@ def STATEMENT(current, G):
         s.update(s1)
         return next(G), t, s
 
-    if current.name == "RETURN":
+    elif current.name == "RETURN":
         t.children.append(tree("RETURN"))
         current, child, s1 = RETURN_STMT(next(G), G)
         t.children.append(child)
@@ -269,13 +298,28 @@ def STATEMENT(current, G):
     else:
         raise ParserError("Syntax Error: Inappproriate token to start a statement" + getTokenLineInfo(current))
 
+def ARGLIST(current, G):
+    t = tree("ARGLIST")
+    s = {}
+
+    if (current.name == "NOT" or current.name == "MINUS" or current.name == "IDENT" or current.name == "INTLIT"
+        or current.name == "BOOLLIT" or current.name == "STRINGLIT" or current.name == "LPAREN"):
+        current, child, s1 = EXPR_LIST(current, G)
+        t.children.append(child)
+        s.update(s1)
+        return current, t, s
+
+    else:
+        t.children.append(tree("LAMBDA"))
+        return current, t, s
+
 def RETURN_STMT(current, G):
     t = tree("RETURN STATEMENT")
     s = {}
     current, child, s1 = FACT2(current, G)
     t.children.append(child)
     s.update(s1)
-    return current, child, s1
+    return current, child, s
 
 
 def ASSIGNMENT(current, G):

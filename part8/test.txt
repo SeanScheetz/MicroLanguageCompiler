@@ -1,14 +1,12 @@
-begin
 def int a(int x, int y):
     string v;
     v := "testing 123";
     return v;
 
-def int b(string c, bool a):
+def int b():
     return a;
 
-enddefine
-
+begin
     int x;
-
+    func test(not True, -2, "test");
 end
