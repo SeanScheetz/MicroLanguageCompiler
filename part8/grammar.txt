@@ -1,4 +1,4 @@
-<program>	->	#start begin <function list>enddefine <statement list> end #finish
+<program>	->	#start begin <function list> enddefine <statement list> end #finish
 <function list> -> <function decl> { <function decl> } | lambda
 <function decl> -> def <type> <ident> ( <param list> ): <statement list>
 <param list> -> <type> <ident> {, <type> <ident> }
