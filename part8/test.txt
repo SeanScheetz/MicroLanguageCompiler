@@ -3,10 +3,10 @@ def int a(int x, int y):
     v := "testing 123";
     return v;
 
-def int b():
+def void b():
     return a;
 
 begin
-    int x;
-    func test(not True, -2, "test");
+    void x;
+    func test(x);
 end

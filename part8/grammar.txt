@@ -10,7 +10,7 @@
 <return stmt> -> return <fact2> #check that fact2 matches function return type unless void
 <assignment>-> <ident> := <expression> #assign
 <decl>      -> <type> <ident>
-<type>      ->  string | int | bool
+<type>      ->  string | int | bool | void
 <id list>	->	<ident> {, <ident>}
 <expr list>	->	<expression> {, <expression> }
 <ident>	    ->	ID #process

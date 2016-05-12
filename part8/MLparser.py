@@ -250,7 +250,7 @@ def STATEMENT(current, G):
         t.children.append(child)
         s.update(s1)
         if current.name != "RPAREN":
-            raise ParserError("Syntax Error: Function call missing opening param to arg list" + getTokenLineInfo(current))
+            raise ParserError("Syntax Error: Function call missing closing param to arg list" + getTokenLineInfo(current))
         current = next(G)
         if current.name != "SEMICOLON":
             raise ParserError("Syntax Error: Function call doesn't end with a semicolon " + getTokenLineInfo(current))
@@ -302,7 +302,7 @@ def ARGLIST(current, G):
     t = tree("ARGLIST")
     s = {}
 
-    if (current.name == "NOT" or current.name == "MINUS" or current.name == "IDENT" or current.name == "INTLIT"
+    if (current.name == "NOT" or current.name == "MINUS" or current.name == "ID" or current.name == "INTLIT"
         or current.name == "BOOLLIT" or current.name == "STRINGLIT" or current.name == "LPAREN"):
         current, child, s1 = EXPR_LIST(current, G)
         t.children.append(child)
@@ -397,6 +397,9 @@ def TYPE(current, G):
     elif current.name == "STRING":
         t.children.append(tree("STRING"))
         return next(G), t, s, "STRING"
+    elif current.name == "VOID":
+        t.children.append(tree("VOID"))
+        return next(G), t, s, "VOID"
 
 
 def EXPRESSION(current, G):
