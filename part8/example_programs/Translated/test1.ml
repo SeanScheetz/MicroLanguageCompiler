@@ -1,19 +1,18 @@
 def void foo():
-  int i = 0;
-  i = i + 1;
+  int i;
+  i := 0;
+  i := i + 1;
   write("In foo: ", i, "\n");
-}
 
-void foo2() {
+def void foo2():
   write("In foo2.\n");
-}
 
 BEGIN
   write("In main.\n");
   func foo();
   write("Returned to main.\n");
-  foo();
+  func foo();
   write("Returned to main. (Again.)\n");
-  foo2();
+  func foo2();
   write("Returned to main.\n");
 END
